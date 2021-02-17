@@ -26,13 +26,19 @@ class modele_physique(baseM.base_model):
             d[i] = self.predictOne(x_test[i],alpha[i])
         return d
 
+    def toDegrees(v):
+        return v*180/np.pi   
+
+    def toRadians(v):
+        return v*np.pi / 180
+    
     def toNordBasedHeading(self,GpsHeading):
         return 90 - GpsHeading
 
-    def predictFromInstantSpeed(self, x_test, alpha):
+    def predictFromInstantSpeed(x_test, alpha):
         '''
         based on the fact that we are in small distances, we suppose that a cell is a plane
-        param: x_test : [[lat,longi,GpsHeading,GpsSpeed]*N], [alpha_0,...,alpha_n]
+        param: x_test : [[lat,longi,GpsHeading,GpsSpeed]*N], alpha
                 d : [[predi_lat, predi_longi]*N]
                 formula source:
                 https://cloud.tencent.com/developer/ask/152388
@@ -41,14 +47,14 @@ class modele_physique(baseM.base_model):
         N = len(x_test)
         res = np.zeros((N,2))
         for i in range(len(x_test)):
-            lat1, lon1 = x_test[i,:2]
-            d = x_test[i,3]*alpha[i]/radius
-            tc = self.toNordBasedHeading(x_test[i,2])
+            lat1, lon1 = toRadians(x_test[i,:2])
+            d = x_test[i,3]*alpha/radius
+            tc = toRadians(toNordBasedHeading(x_test[i,2]))
             lat2 = np.arcsin(np.sin(lat1)*np.cos(d) + np.cos(lat1)*np.sin(d)*np.cos(tc))
             dlon = np.arctan2(np.sin(tc)*np.sin(d)*np.cos(lat1), np.cos(d) - np.sin(lat1)*np.sin(lat2))
             lon2= (lon1-dlon + np.pi) % (2*np.pi) - np.pi
             res[i] = [lat2,lon2] 
-        return res
+        return toDegrees(res)
     
     def score(self,func,x_test):
         '''
@@ -62,5 +68,4 @@ class modele_physique(baseM.base_model):
         print(X_true, X_predit)
         return func(X_predit,X_true)
 
-    
     
