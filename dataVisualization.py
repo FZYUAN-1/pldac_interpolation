@@ -10,6 +10,7 @@ import dataSource as ds
 # Fonctions de visualisations
 # =============================================================================
 
+#%%
 #Affiche un histogramme pour un attribut du DataFrame
 def afficher_histogramme(df,attr):
 	""" DataFrame * str -> None
@@ -20,7 +21,7 @@ def afficher_histogramme(df,attr):
 	sns.histplot(df[attr])
 	plt.show()
 	
-	
+#%%	
 #Dessine un rectangle sur les cases où se trouvent les données sélectionnées
 def dessine_rect(ax, pos, x_splits, y_splits, ecart_x, ecart_y):
 	""" AxesSubplot * (int,int) * float * float * flot * float -> None
@@ -30,7 +31,7 @@ def dessine_rect(ax, pos, x_splits, y_splits, ecart_x, ecart_y):
 	x, y = pos
 	ax.add_patch(patches.Rectangle((x_splits[x],y_splits[y]), ecart_x, ecart_y, edgecolor = 'black', fill=False))
 
-
+#%%
 #Ajout du titre et des noms d'axes
 def set_ax_legend(ax, title, xlabel, ylabel):
 	""" AxesSubplot * str * str * str -> None
@@ -41,7 +42,7 @@ def set_ax_legend(ax, title, xlabel, ylabel):
 	ax.set_xlabel(xlabel)
 	ax.set_ylabel(ylabel)
 
-
+#%%
 #Permet de visualiser le sens de la route
 def fleche_sens(df, ax):
 	""" DataFrame * AxesSubplot -> None
@@ -56,7 +57,7 @@ def fleche_sens(df, ax):
 		dy_i = df.iloc[math.floor(n/2), df.columns.get_loc("Longitude")] - y_i
 		ax.quiver(x_i, y_i, dx_i, dy_i)
 		
-
+#%%
 #Visualisation graphique de la carte
 def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y, n_interval=10) :
 	""" DataFrame * (int,int) * float * float * float * float * float * float * int -> None
@@ -123,7 +124,7 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 			  
 	plt.show()
 		
-
+#%%
 #Histogramme 3D de la norme des vecteurs de vitesse et ses angles Θ	
 def afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
     """ DataFrame * (int,int) * float * float * float * float -> None

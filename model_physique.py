@@ -12,7 +12,7 @@ class modele_physique(baseM.base_model):
         param: x_test : [[prevlat,prevlongi,GpsTime],[lat,longi,GpsTime]]
         retourne  [nextlat, nextlongi] : prochaine lat et longi apres la duree alpha
         '''
-        v_speed = (x_test[0][:2] - x_test[1][:2])/(x_test[1][2] - x_test[0][2])
+        v_speed = (x_test[0][:2] - x_test[1][:2])/np.maximum(1e-10,(x_test[1][2] - x_test[0][2]))
         return x_test[1][:2] + v_speed*alpha
 
     def predict(self, x_test, alpha):
@@ -61,11 +61,11 @@ class modele_physique(baseM.base_model):
         param: x_test : [[[prevlat,prevlongi,GpsTime],[lat,longi,GpsTime],[nextlat,nextlongi,GpsTime]]*N]
                func : fonction d'evaluation, i.e. moindre_c
         '''
-        print(x_test)
+        #print(x_test)
         alpha = x_test[:,2][:,2] - x_test[:,1][:,2]
         X_predit = self.predict(x_test[:,:2], alpha)
         X_true = x_test[:,2][:,:2]
-        print(X_true, X_predit)
+        #print(X_true, X_predit)
         return func(X_predit,X_true)
 
     

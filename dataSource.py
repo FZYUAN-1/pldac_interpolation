@@ -6,6 +6,7 @@ import pandas as pd
 # Fonctions récupération/traitements des données
 # =============================================================================
 
+#%%
 #Importation des données
 def importData():
 	"""
@@ -25,7 +26,7 @@ def importData():
 	df = df[df['Trip'].isin(trips)]
 	return df
 
-
+#%%
 #Calcul des paramètres
 def calcul_param(df, n_interval=10):
 	"""
@@ -59,7 +60,7 @@ def calcul_param(df, n_interval=10):
 	
 	return latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y
 
-
+#%%
 #Fonction pour affecter des points du dataframe à une case sur un plan
 def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
 	""" DataFrame * float * float * float * float -> Series(int) * Series(int)
@@ -72,7 +73,7 @@ def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
 	
 	return x,y
 
-
+#%%
 #Permet de sélectionner tous les points appartenant à une case
 def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 	""" DataFrame * (int,int) * float * float * float * float -> DataFrame
@@ -83,7 +84,7 @@ def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 	i, j = pos
 	return df[(x==i) & (y==j)]
 
-
+#%%
 #Calcul de l'effectif et de la vitesse moyenne de la case pour chaque point du DataFrame
 def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
 	""" DataFrame * float * float * float * float * int -> list(int) * list(float)
@@ -111,7 +112,7 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
 		
 	return e, v
 
-
+#%%
 # Calcul de la norme et de l'angle  Θ  des vecteurs vitesse par rapport au point précédent
 def calcul_norm_theta(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 	""" DataFrame * (int,int) * float * float * float * float -> list(float) * list(float)
@@ -137,11 +138,6 @@ def calcul_norm_theta(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 			liste_theta_v.append(theta)
 			
 	return liste_norm_v, liste_theta_v
-
-
-
-
-
 
 
 
