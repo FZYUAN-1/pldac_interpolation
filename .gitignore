@@ -2,3 +2,8 @@ models/__pycache__/model_abstract.cpython-37.pyc
 models/__pycache__/model_physique.cpython-37.pyc
 dataset/DataGpsDas.csv
 .vscode/settings.json
+DataGpsDas.csv
+__pycache__/dataSource.cpython-37.pyc
+__pycache__/methods.cpython-37.pyc
+__pycache__/model_abstract.cpython-37.pyc
+__pycache__/model_physique.cpython-37.pyc
