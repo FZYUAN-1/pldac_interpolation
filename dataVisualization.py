@@ -68,10 +68,19 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	
 		Affiche un aperçu de la carte et d'une case donnée.
 	"""
+	#Préparation des données
+	
 	#On sépare en n_interval la latitude et la longitude
 	x_splits = np.linspace(latitude_min,latitude_max, n_interval)
 	y_splits = np.linspace(longitude_min,longitude_max, n_interval)
 	
+	#Ajout des colonnes de l'effectif et de la vitesse moyenne d'une case
+	e, v = ds.calcul_eff_vit_moy(df, latitude_min, longitude_min, ecart_x, ecart_y)
+	df["Effectif_case"] = e    
+	df["Vitesse_moy_case"] = v
+	
+	
+	#affichage 
 	fig, ax = plt.subplots(2,2, figsize=(15,12))
 	
 	#Visualisation (1ème figure):
