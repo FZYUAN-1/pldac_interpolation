@@ -83,6 +83,10 @@ def test1(trips,func_cost):
 #%%
 # Calcul de la matrice d'erreurs
 def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
+	""" DataFrame * float * float * float * flaot * int -> list(list(float))
+		
+		Retourne une matrice contenant l'erreur à chaque case.
+	"""
 	#matrice erreur des cases
 	mat_err = np.zeros((n_interval,n_interval))
 	#parcours de toutes les cases
@@ -99,10 +103,11 @@ def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval
 				mat_err[i,j] = test1(mat,mtds.moindre_c)
 				print(mat_err[i,j])
 			
-	return mat_err        
+	return mat_err
+	        
 				
 # %%
-#test
+#Test
 cost = test1(mat,mtds.moindre_c)
 print(cost)
 
