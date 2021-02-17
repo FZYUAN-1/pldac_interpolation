@@ -75,7 +75,7 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	df["Vitesse_moy_case"] = v
 	
 	
-	#affichage 
+	#Affichage 
 	fig, ax = plt.subplots(2,2, figsize=(15,12))
 	
 	#Visualisation (1ème figure):
@@ -123,7 +123,46 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 			  
 	plt.show()
 		
-		
+
+#Histogramme 3D de la norme des vecteurs de vitesse et ses angles Θ	
+def afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
+    """ DataFrame * (int,int) * float * float * float * float -> None
+	
+		Affiche un histogramme 3d par rapport aux normes et anlges des vecteurs vitesse
+        d'une case donnée.
+	"""
+    #Préparation des données
+    liste_norm_v, liste_theta_v = ds.calcul_norm_theta(df, pos, latitude_min, longitude_min, ecart_x, ecart_y)
+    
+    #Affichage 
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    hist, xedges, yedges = np.histogram2d(liste_norm_v, liste_theta_v, bins=4)
+    
+    # The start of each bucket.
+    xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1])
+    
+    xpos = xpos.flatten()
+    ypos = ypos.flatten()
+    zpos = np.zeros_like(xpos)
+    
+    # The width of each bucket.
+    dx, dy = np.meshgrid(xedges[1:] - xedges[:-1], yedges[1:] - yedges[:-1])
+    
+    dx = dx.flatten()
+    dy = dy.flatten()
+    dz = hist.flatten()
+    
+    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='b', zsort='average')
+    
+    ax.set_xlabel('Norm')
+    ax.set_ylabel('$\Theta$')
+    ax.set_zlabel('Effectif')
+    
+    plt.title("Histogramme 3D de la norme des vecteurs de vitesse et ses angles $\Theta$ :")
+    
+    plt.show()
 		
 		
 		
