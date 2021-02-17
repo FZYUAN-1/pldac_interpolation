@@ -75,8 +75,7 @@ def test1(trips,func_cost):
 		for elem_last in last:
 			for j in range(len(first)-1):
 				for k in range(j+1, len(first)):
-					tmp = m.score(func_cost,np.array([[first[j], first[k], elem_last]]))
-					cost += tmp
+					cost += m.score(func_cost,np.array([[first[j], first[k], elem_last]]))
 					print(cpt_boucle)
 					cpt_boucle+=1
 	return cost
@@ -96,7 +95,7 @@ def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval
 				mat = []
 				for t in case_df.groupby('Trip'):
 					mat.append(t[1][['Latitude','Longitude','GpsTime']].to_numpy())
-				print("aaaaaaa")
+
 				mat_err[i,j] = test1(mat,mtds.moindre_c)
 				print(mat_err[i,j])
 			
