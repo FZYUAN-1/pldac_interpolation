@@ -17,7 +17,7 @@ def importData():
 		Les données du fichier csv sous forme de Dataframe (Pandas)
 
 	"""
-	df = pd.read_csv("DataGpsDas.csv", nrows=1000000)
+	df = pd.read_csv("../DataGpsDas.csv", nrows=1000000)
 	df = df[(df["Latitude"] >= 42.282970-0.003) & (df["Latitude"] <= 42.282970+0.003) 
 			& (df["Longitude"] >= -83.735390-0.003) & (df["Longitude"] <= -83.735390+0.003)]
 	trips, counts = np.unique(df["Trip"], return_counts=True)

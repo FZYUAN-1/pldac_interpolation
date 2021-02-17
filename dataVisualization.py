@@ -22,18 +22,13 @@ def afficher_histogramme(df,attr):
 	
 	
 #Dessine un rectangle sur les cases où se trouvent les données sélectionnées
-def dessine_rect(df, ax, x_splits, y_splits, latitude_min, longitude_min, ecart_x, ecart_y):
-	""" DataFrame * AxesSubplot * float * float * flot * float -> None
+def dessine_rect(ax, pos, x_splits, y_splits, ecart_x, ecart_y):
+	""" AxesSubplot * (int,int) * float * float * flot * float -> None
 	
-		Encadre les cases correspondant aux points du df.
+		Encadre la case correspondant à la position.
 	"""
-	#calcul des indices x et y des cases pour chaque ligne de df
-	x, y = ds.affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y)
-	#pour chaque ligne de df, on encadre en noir sa case
-	for i in range(len(x)):
-		x_i = x.iloc[i]
-		y_i = y.iloc[i]
-		ax.add_patch(patches.Rectangle((x_splits[x_i],y_splits[y_i]), ecart_x, ecart_y, edgecolor = 'black', fill=False))
+	x, y = pos
+	ax.add_patch(patches.Rectangle((x_splits[x],y_splits[y]), ecart_x, ecart_y, edgecolor = 'black', fill=False))
 
 
 #Ajout du titre et des noms d'axes
@@ -105,6 +100,8 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 		ax[0][1].plot([x,x],[longitude_min, longitude_max], c='grey',  alpha = 0.5)
 		ax[0][1].plot([latitude_min,latitude_max],[y,y], c='grey', alpha = 0.5)
 	
+	dessine_rect(ax[0][0], pos, x_splits, y_splits, ecart_x, ecart_y)
+	dessine_rect(ax[0][1], pos, x_splits, y_splits, ecart_x, ecart_y)
 	
 	#Visualisation (3ème figure) :
 	sx, sy = pos
@@ -124,8 +121,6 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	sns.histplot(case_df["GpsSpeed"],ax=ax[1][1])
 	ax[1][1].set_title(f"Distribution de la vitesse sur la case {(sx,sy)}")
 			  
-	afficher_histogramme(df,"GpsHeading")
-
 	plt.show()
 		
 		
