@@ -84,7 +84,7 @@ def test1(trips,func_cost):
 	return cost
 
 #%%
-# Calcul de la matrice d'erreurs
+# Calcul de la matrice des erreurs
 def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
 	""" DataFrame * float * float * float * flaot * int -> list(list(float))
 		
