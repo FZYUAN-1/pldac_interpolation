@@ -26,16 +26,16 @@ class modele_physique(baseM.base_model):
             d[i] = self.predictOne(x_test[i],alpha[i])
         return d
 
-    def toDegrees(v):
+    def toDegrees(self,v):
         return v*180/np.pi   
 
-    def toRadians(v):
+    def toRadians(self,v):
         return v*np.pi / 180
     
     def toNordBasedHeading(self,GpsHeading):
         return 90 - GpsHeading
 
-    def predictFromInstantSpeed(x_test, alpha):
+    def predictFromInstantSpeed(self,x_test, alpha):
         '''
         based on the fact that we are in small distances, we suppose that a cell is a plane
         param: x_test : [[lat,longi,GpsHeading,GpsSpeed]*N], alpha
