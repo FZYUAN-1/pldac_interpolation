@@ -1,3 +1,5 @@
+import numpy as np
+import dataSource as ds
 """
 argmin_alpha (X * W = Y_p)
 
@@ -41,6 +43,8 @@ def fit_case_ML(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
     w2 = np.linalg.solve(np.array([[latix2, latilongx],[latilongx, longx2]]), np.array([2*latilongxy, 2*longxy]))
     
     return np.vstack((w1, w2))
+
+df = ds.importData()
 
 latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y = ds.calcul_param(df)
 fit_case_ML(df, (2,1), latitude_min, latitude_max, ecart_x, ecart_y)

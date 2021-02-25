@@ -12,7 +12,7 @@ import dataSource as ds
 
 #%%
 #Affiche un histogramme pour un attribut du DataFrame
-def afficher_histogramme(df,attr):
+def afficher_histogramme_df(df,attr):
 	""" DataFrame * str -> None
 	
 		Affiche un histogramme sur un attribut du DataFrame df.
@@ -138,32 +138,55 @@ def afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_
     #Affichage 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+    plt.title("Histogramme 3D de la norme des vecteurs de vitesse et ses angles $\Theta$ :")
+    ax.set_xlabel('Norm')
+    ax.set_ylabel('$\Theta$')
+    ax.set_zlabel('Effectif')
     
     hist, xedges, yedges = np.histogram2d(liste_norm_v, liste_theta_v, bins=4)
     
     # The start of each bucket.
-    xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1])
-    
+    xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1])   
     xpos = xpos.flatten()
     ypos = ypos.flatten()
     zpos = np.zeros_like(xpos)
     
     # The width of each bucket.
-    dx, dy = np.meshgrid(xedges[1:] - xedges[:-1], yedges[1:] - yedges[:-1])
-    
+    dx, dy = np.meshgrid(xedges[1:] - xedges[:-1], yedges[1:] - yedges[:-1])  
     dx = dx.flatten()
     dy = dy.flatten()
     dz = hist.flatten()
     
     ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='b', zsort='average')
     
-    ax.set_xlabel('Norm')
-    ax.set_ylabel('$\Theta$')
-    ax.set_zlabel('Effectif')
-    
-    plt.title("Histogramme 3D de la norme des vecteurs de vitesse et ses angles $\Theta$ :")
-    
     plt.show()
-		
-		
+
+
+#Affichage de la matrice en heatmap
+def afficher_mat(mat, title="Matrice en heatmap", n_interval=10):
+    """ Matrice(float) * int -> None
+    
+        Affiche un heatmap de la matrice.
+    """
+    plt.figure()
+    plt.title(title)
+    sns.heatmap(mat, linewidths=.5, cmap="YlGnBu",
+            yticklabels=np.arange(n_interval-1, -1, -1))
+    plt.show()
+    
+    
+#Histogramme des valeurs de la matrice
+def afficher_mat_hist(mat):
+    """ Matrice(float) -> None
+    
+        Affiche les valeurs de la matrice sous histogramme.
+    """
+    #On commence par sélectionner que les cases contenant une valeur
+    val = mat.ravel()[mat.ravel() != 0]
+
+    #Affichage des valeurs sous histogramme
+    plt.figure()
+    plt.title("Affichage des valeurs de la matrice sous histogramme")
+    sns.histplot(val)
+    plt.show()		
 		

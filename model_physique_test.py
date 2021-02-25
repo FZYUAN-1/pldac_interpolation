@@ -54,7 +54,7 @@ def test1(trips, func_cost):
 
     return cost
 
-# Test for predition from GpsHeading and GpsSpeed
+# Test for prediction from GpsHeading and GpsSpeed
 def test2(trips, func_cost):
     mat_first, mat_last=split_AllTrip(trips, take_continuous)
     cost=0
@@ -95,7 +95,7 @@ def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval
                         t[1][['Latitude', 'Longitude', 'GpsTime']].to_numpy())
 
                 mat_err[n_interval-1-i, j]=test1(mat, mtds.moindre_c)
-                print(mat_err[n_interval-1-i, j])
+                #print(mat_err[n_interval-1-i, j])
 
     return mat_err
 
@@ -103,22 +103,13 @@ def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval
 # %%
 # Test
 
-# cost = test1(mat,mtds.moindre_c)
-# print(cost)
-
-dv.affiche_carte(df, pos, latitude_min, latitude_max,
-                 longitude_min, longitude_max, ecart_x, ecart_y)
-# dv.afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_y)
-
 mat_err = calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y)
-plt.title("Matrice des erreurs")
-sns.heatmap(mat_err, linewidths=.5, cmap="YlGnBu",
-            yticklabels=np.arange(n_interval-1, -1, -1))
-plt.show()
+dv.afficher_mat(mat_err,"Matrice erreur 1", n_interval)
+dv.afficher_mat_hist(mat_err)
 
 # %%
 
-def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
+def calcul_mat_err2(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
     """ DataFrame * float * float * float * flaot * int -> list(list(float))
 
             Retourne une matrice contenant l'erreur à chaque case.
@@ -139,16 +130,15 @@ def calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y, n_interval
                         t[1][['Latitude', 'Longitude', 'GpsHeading', 'GpsSpeed', 'GpsTime']].to_numpy())
 
                 mat_err[n_interval-1-i, j]=test2(mat, mtds.moindre_c)
-                print(mat_err[n_interval-1-i, j])
+                #print(mat_err[n_interval-1-i, j])
 
     return mat_err
 
-dv.affiche_carte(df, pos, latitude_min, latitude_max,
-                 longitude_min, longitude_max, ecart_x, ecart_y)
+#dv.affiche_carte(df, pos, latitude_min, latitude_max,
+#                 longitude_min, longitude_max, ecart_x, ecart_y)
 # dv.afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_y)
 
-mat_err=calcul_mat_err(df, latitude_min, longitude_min, ecart_x, ecart_y)
-plt.title("Matrice des erreurs")
-sns.heatmap(mat_err, linewidths=.5, cmap="YlGnBu",
-            yticklabels=np.arange(n_interval-1, -1, -1))
-plt.show()
+
+mat_err=calcul_mat_err2(df, latitude_min, longitude_min, ecart_x, ecart_y)
+dv.afficher_mat(mat_err,"Matrice erreur 2",n_interval)
+dv.afficher_mat_hist(mat_err)

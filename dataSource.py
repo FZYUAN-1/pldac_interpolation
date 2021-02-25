@@ -9,14 +9,9 @@ import pandas as pd
 #%%
 #Importation des données
 def importData():
-	"""
-	Importation des données du fichier DataGpsDas.csv
-
-	Returns
-	-------
-	df : DataFrame
-		Les données du fichier csv sous forme de Dataframe (Pandas)
-
+	""" None -> DataFrame
+    
+	Importation des données du fichier DataGpsDas.csv en respectant certaines contraintes.
 	"""
 	df = pd.read_csv("DataGpsDas.csv", nrows=1000000)
 	df = df[(df["Latitude"] >= 42.282970-0.003) & (df["Latitude"] <= 42.282970+0.003) 
@@ -29,15 +24,9 @@ def importData():
 #%%
 #Calcul des paramètres
 def calcul_param(df, n_interval=10):
-	"""
+	""" DataFrame * int -> float * float * float * float * float * float 
+    
 	Calcul des paramètres bornes longitudes, latitudes et l'écarts entre les intervalles.
-
-	Parameters
-	----------
-	df : DataFrame
-		Le Dataset sur lequel on calcule les paramètres
-	n_interval : int
-		Le nombre d'intervalles.
 
 	Returns
 	-------
@@ -75,7 +64,7 @@ def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
 
 #%%
 #Permet de sélectionner tous les points appartenant à une case
-def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
+def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y, step=1):
 	""" DataFrame * (int,int) * float * float * float * float -> DataFrame
 	
 		Retourne un DataFrame contenant toutes les lignes se situant dans la case pos.
