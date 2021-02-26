@@ -3,17 +3,16 @@ import numpy as np
 import pandas as pd
 
 # =============================================================================
-# Fonctions récupération/traitements des données
+# Fonctions récupérations de données
 # =============================================================================
 
-#%%
 #Importation des données
 def importData():
 	""" None -> DataFrame
     
 	Importation des données du fichier DataGpsDas.csv en respectant certaines contraintes.
 	"""
-	df = pd.read_csv("DataGpsDas.csv", nrows=1000000)
+	df = pd.read_csv("../DataGpsDas.csv", nrows=1000000)
 	df = df[(df["Latitude"] >= 42.282970-0.003) & (df["Latitude"] <= 42.282970+0.003) 
 			& (df["Longitude"] >= -83.735390-0.003) & (df["Longitude"] <= -83.735390+0.003)]
 	trips, counts = np.unique(df["Trip"], return_counts=True)
@@ -21,7 +20,7 @@ def importData():
 	df = df[df['Trip'].isin(trips)]
 	return df
 
-#%%
+
 #Calcul des paramètres
 def calcul_param(df, n_interval=10):
 	""" DataFrame * int -> float * float * float * float * float * float 
@@ -49,7 +48,7 @@ def calcul_param(df, n_interval=10):
 	
 	return latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y
 
-#%%
+
 #Fonction pour affecter des points du dataframe à une case sur un plan
 def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
 	""" DataFrame * float * float * float * float -> Series(int) * Series(int)
@@ -62,7 +61,7 @@ def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
 	
 	return x,y
 
-#%%
+
 #Permet de sélectionner tous les points appartenant à une case
 def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y, step=1):
 	""" DataFrame * (int,int) * float * float * float * float -> DataFrame
@@ -73,7 +72,7 @@ def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y, ste
 	i, j = pos
 	return df[(x==i) & (y==j)]
 
-#%%
+
 #Calcul de l'effectif et de la vitesse moyenne de la case pour chaque point du DataFrame
 def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
 	""" DataFrame * float * float * float * float * int -> list(int) * list(float)
@@ -101,7 +100,7 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
 		
 	return e, v
 
-#%%
+
 # Calcul de la norme et de l'angle  Θ  des vecteurs vitesse par rapport au point précédent
 def calcul_norm_theta(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 	""" DataFrame * (int,int) * float * float * float * float -> list(float) * list(float)
@@ -127,6 +126,55 @@ def calcul_norm_theta(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 			liste_theta_v.append(theta)
 			
 	return liste_norm_v, liste_theta_v
+
+
+# =============================================================================
+# Fonctions traitements de données
+# =============================================================================
+
+
+def echantillon(df, step=1):
+    """ DataFrame * int -> DataFrame
+        
+        Sélectionne une ligne sur 'step' dans le DataFrame.
+    """
+    ind = np.arange(0,df.shape[0],step)
+    return df.iloc[ind]
+
+#Création des données d'apprentissage pour la prédiction du prochain point
+def create_data_xy(df, attrs_x, label, step=1):
+    """ Renvoie les DataFrames X et Y, en fonction des paramètres.
+
+        @params :
+            df      : DataFrame : Données à traiter
+            attrs_x : list(str) : Liste des attributs dans les données d'apprentissage
+            label   : str       : Attributs du label
+            step    : int       : Le pas à prendre pour la sélection des lignes
+            
+        @return :
+            DataFrame, DataFrame           
+    """
+    data_x = None
+    data_y = None
+    trips = np.unique(df["Trip"])
+
+    for t in range(len(trips)):
+        trip_df = df[df['Trip'] == trips[t]]
+        if t == 0:
+            data_x = echantillon(trip_df[:-step], step)[attrs_x]
+            data_y = echantillon(trip_df[step:], step)[label]
+
+        else :
+            x = echantillon(trip_df[:-step], step)[attrs_x]
+            y = echantillon(trip_df[step:], step)[label]
+            data_x = pd.concat([data_x,x])
+            data_y = pd.concat([data_y,y])
+        
+    return data_x, data_y
+
+
+
+
 
 
 
