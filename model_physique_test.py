@@ -8,15 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-def 
-
-# %%
-# Récupération des données et des paramètres
-df = ds.importData()
-latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y = ds.calcul_param(
-    df)
-pos = (4, 4)
-n_interval = 10
 
 # %%
 # group by trip, convert to numpy matrix

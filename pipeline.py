@@ -1,4 +1,5 @@
 import model_physique1 as md1
+import dataSource as ds
 
 def moindre_c(X_predit, X_test):
     #print(X_predit, X_test)
@@ -12,13 +13,21 @@ class Pipeline:
 
     def exec(self):
         self.model.fit(self.data)
-        res = self.model.score()
-        print(res)
+        predict_res = self.model.predict(200)
+        print(predict_res)
         # visualisation..
-        return res
+        #return res
 
-model = md1.modele_physique1(400,md1.strategy_last2,moindre_c)
-pipeline = Pipeline()
+# %%
+# Récupération des données et des paramètres
+df = ds.importData()
+latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y = ds.calcul_param(
+    df)
+pos = (4, 4)
+n_interval = 10
+
+model = md1.model_physique1(400,moindre_c)
+pipeline = Pipeline(df,model)
 pipeline.exec()
 
 
@@ -38,7 +47,7 @@ def take_continuous(pts, start, stop, step, n):
 # Fonctions splits
 
 def echanti_OneTrip(trip, take_function, st=0.5, freq = 400, k1=0.1, k2=0.1, random=0):
-    '''
+
     trip : np.array [data points in one trip]
     st : sample from first st% data_points
     k1: from the first st% data_points, we randomly sample k1% numbers of points
@@ -48,7 +57,7 @@ def echanti_OneTrip(trip, take_function, st=0.5, freq = 400, k1=0.1, k2=0.1, ran
                     |               |        |
                     k1              st       k2
     returns : Sampled_prev_points : [[lat,lon,gpstime]*(N*k1)], Sampled_score_points[[lat,lon,gpstime]*(int((len(trip)-N)*k2))]
-    '''
+
     if len(trip) < 3:
         return [], []
     N = int(len(trip)*st)
