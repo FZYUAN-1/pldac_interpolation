@@ -12,3 +12,5 @@ models/__pycache__/model_physique.cpython-38.pyc
 __pycache__/model_abstract.cpython-38.pyc
 __pycache__/dataSource.cpython-38.pyc
 __pycache__/dataVisualization.cpython-37.pyc
+__pycache__/Eval.cpython-37.pyc
+.vscode/launch.json
