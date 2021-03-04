@@ -38,7 +38,6 @@ class Traitement:
             data_x, data_y = func(self.df, attrs, self.labels, freq//200)
             X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, 
                                                                 test_size=test_size, random_state=random_state)
-            
             self.l_Xtrain.append(X_train)
             self.l_Xtest.append(X_test)
             self.l_Ytrain.append(y_train)
@@ -134,4 +133,4 @@ class Evaluation :
         print()
         self.afficher_mse()
         print()
-        self.afficher_coef()
+        #self.afficher_coef()
