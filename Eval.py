@@ -1,8 +1,6 @@
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
-from math import ceil, floor
-import matplotlib.pyplot as plt
 
 
 # =============================================================================
@@ -15,17 +13,17 @@ class Traitement:
         d'apprentissage et de test.
     """
     
-    def __init__(self, df, attrs_x, labels, preprocessor=None):
+    def __init__(self, df, l_attrs_x, labels, preprocessor=None):
         #DataFrame
         self.df = df
         #features
-        self.attrs = attrs_x
+        self.l_attrs = l_attrs_x
         #targets
         self.labels = labels
         #preprocessor
         self.preprocessor = preprocessor
         
-        #liste des données d'apprentissage/test pour chaque modèle
+        #Données d'apprentissage/test pour chaque modèle
         self.l_Xtrain = []
         self.l_Ytrain = []
         self.l_Xtest = []
@@ -35,39 +33,17 @@ class Traitement:
     # Fonction de construction des données de train/test en fonction de la méthode 
     # passée en argument
     
-    def set_data_train_test(self, func, step=1, test_size=0.2, random_state=0):
-        self.l_Xtrain = []
-        self.l_Ytrain = []
-        self.l_Xtest = []
-        self.l_Ytest = []
-        
-        for label in self.labels:
-            data_x, data_y = func(self.df, self.attrs, label, step)
-            X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=test_size, random_state=random_state)
+    def set_data_train_test(self, func, freq=200, test_size=0.2, random_state=0):
+        for attrs in self.l_attrs:
+            data_x, data_y = func(self.df, attrs, self.labels, freq//200)
+            X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, 
+                                                                test_size=test_size, random_state=random_state)
+            
             self.l_Xtrain.append(X_train)
             self.l_Xtest.append(X_test)
             self.l_Ytrain.append(y_train)
             self.l_Ytest.append(y_test)
-            
-    # Getters
-    def getPreprocessor(self):
-        return self.preprocessor
-    
-    def getLXtrain(self):
-        return self.l_Xtrain
-    
-    def getLXtest(self):
-        return self.l_Xtest
-    
-    def getLYtrain(self):
-        return self.l_Ytrain
-    
-    def getLYtest(self):
-        return self.l_Ytest
-    
-    def getLabels(self):
-        return self.labels
-    
+
 
 # =============================================================================
 #  Class Evaluation 
@@ -81,23 +57,25 @@ class Evaluation :
     
     def __init__(self, models, traitement):
         self.models = models
-        self.preprocessor = traitement.getPreprocessor()
-        self.l_Xtrain = traitement.getLXtrain()
-        self.l_Ytrain = traitement.getLYtrain()
-        self.l_Xtest = traitement.getLXtest()
-        self.l_Ytest = traitement.getLYtest()
-        self.labels = traitement.getLabels()
+        self.preprocessor = traitement.preprocessor
+
+        self.l_Xtrain = traitement.l_Xtrain
+        self.l_Ytrain = traitement.l_Ytrain
+        self.l_Xtest = traitement.l_Xtest
+        self.l_Ytest = traitement.l_Ytest
+        self.labels = traitement.labels
         
         #Ajout du preprocessor à la pipeline s'il y en a un
         if self.preprocessor is not None :
-            self.models_pip = [make_pipeline(self.preprocessor, model) for model in self.models]
+            self.models_pip = [make_pipeline(self.preprocessor[i], self.models[i]) for i in range(len(self.models))]
         else: 
             self.models_pip = self.models
     
-
+        
+    
     def fit(self):
         """
-            Fonction quit entraine tous nos modèles.
+            Fonction qui entraine tous nos modèles.
         """
         for i in range(len(self.models)):
             self.models_pip[i].fit(self.l_Xtrain[i], self.l_Ytrain[i])
@@ -114,7 +92,7 @@ class Evaluation :
             Fonction retournant une liste de prédiction sur X pour chaque
             modèle.
         """
-        return [self.models_pip[i].predict(X) for i in range(len(self.models))]
+        return [self.models_pip[i].predict(X[i]) for i in range(len(self.models))]
   
     def getCoef(self):
         """
@@ -132,7 +110,7 @@ class Evaluation :
         """
         scores = self.score()
         for i in range(len(self.models)):
-            print(f"Score obtenu pour le label {self.labels[i] : <10} : {scores[i]}")
+            print(f"Score obtenu pour le modèle {i : <10} : {scores[i]}")
             
     def afficher_coef(self):
         """
@@ -140,36 +118,13 @@ class Evaluation :
         """
         coefs = self.getCoef()
         for i in range(len(self.models)):
-            print(f"Coefficients obtenu pour le label {self.labels[i] : <10} : {coefs[i]}")
+            print(f"Coefficients obtenu pour le modèle {i : <10} : {coefs[i]}")
             
     def afficher_mse(self):
-        l_ypred = self.predict(self.l_Xtest[0])
+        ypred = self.predict(self.l_Xtest)
         for i in range(len(self.models)):
-            print(f"MSE obtenue pour le label {self.labels[i] : <10} : {mean_squared_error(self.l_Ytest[i],l_ypred[i])}")
+            print(f"MSE obtenue pour le modèle  {i : <10} : {mean_squared_error(self.l_Ytest[i],ypred[i])}")
     
-    def afficher_pred(self):
-        """
-            Fonction affichant les prédictions sous forme graphique.
-        """
-        nb_lignes = ceil(len(self.labels)/2)
-        l_ypred = self.predict(self.l_Xtest[0])
-        
-        fig, axs = plt.subplots(nb_lignes,2, figsize = (15,nb_lignes*5))
-
-        if nb_lignes > 1:
-            for i in range(len(self.l_Ytest)):
-                axs[floor(i/2)][i%2].set_title(self.labels[i])
-                axs[floor(i/2)][i%2].scatter(self.l_Xtest[i][self.labels[i]],self.l_Ytest[i])
-                axs[floor(i/2)][i%2].plot(self.l_Xtest[i][self.labels[i]],l_ypred[i], c="r")
-
-        elif nb_lignes == 1:
-            for i in range(len(self.l_Ytest)):
-                axs[i%2].set_title(self.labels[i])
-                axs[i%2].scatter(self.l_Xtest[i][self.labels[i]],self.l_Ytest[i])
-                axs[i%2].plot(self.l_Xtest[i][self.labels[i]],l_ypred[i], c="r")
-        plt.show()
-        
-               
         
     def afficher_resultats(self):
         """
@@ -180,5 +135,3 @@ class Evaluation :
         self.afficher_mse()
         print()
         self.afficher_coef()
-        print()
-        self.afficher_pred()
