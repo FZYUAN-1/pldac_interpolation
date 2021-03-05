@@ -15,7 +15,7 @@ class Traitement:
         d'apprentissage et de test.
     """
     
-    def __init__(self, df, l_attrs_x, labels, preprocessor=None):
+    def __init__(self, df, l_attrs_x, labels, freq_train=1000, freq_test=400, preprocessor=None):
         #DataFrame
         self.df = df
         #features
@@ -24,7 +24,10 @@ class Traitement:
         self.labels = labels
         #preprocessor
         self.preprocessor = preprocessor
-        
+
+        self.freq_train = freq_train
+        self.freq_test = freq_test
+
         #Données d'apprentissage/test pour chaque modèle
         self.l_Xtrain = []
         self.l_Ytrain = []
@@ -37,10 +40,14 @@ class Traitement:
     
     def set_data_train_test(self, freq=200, test_size=0.2, random_state=0):
         for attrs in self.l_attrs:
-            data_x, data_y = create_data_xy(self.df, attrs, self.labels, freq//200)
-            
-            X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, 
-                                                                test_size=test_size, random_state=random_state)
+
+            X_train, X_test, y_train, y_test = train_test_split(self.df, attrs, self.labels, self.freq_train, self.freq_test)
+
+            # ========================================================================
+            # X_train, X_test, y_train, y_test are consisted of every trip
+            # X_train[0] -> attrs for the first trip
+            # ========================================================================
+
             self.l_Xtrain.append(X_train)
             self.l_Xtest.append(X_test)
             self.l_Ytrain.append(y_train)

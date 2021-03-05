@@ -253,10 +253,11 @@ def train_test_split(df,attrs_x, labels,freq_train,freq_test):
         #X_test.append([ datay[i][idx_train[j]+1:idx_train[j+1]:step_test] for j in range(len(idx_train)-1)])
 
 
-'''
+
 df = importData()
 pos = (4,4)
 latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y = calcul_param(df)
+
 case = trouve_data_case(df,pos,latitude_min, longitude_min, ecart_x, ecart_y)
 
 #datax,datay = create_data_xy(case,['Latitude','Longitude','GpsTime'],['Latitude','Longitude','GpsTime'])
@@ -265,6 +266,4 @@ X_train, X_test, y_train, y_test = train_test_split(case,['Latitude','Longitude'
 
 #print(datax[0],datax[1],datay[0],datay[1])
 print(X_train[0],X_test[0],y_train[0],y_test[0])
-'''
-
 
