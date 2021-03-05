@@ -6,7 +6,7 @@ import Eval as ev
 class physic_model(BaseEstimator,RegressorMixin):
     def __init__(self, freq):
         super().__init__()
-        self.v = {}
+        self.v = 
         self.freq = freq
 
     def fit(self, X, y):
@@ -17,18 +17,6 @@ class physic_model(BaseEstimator,RegressorMixin):
         X : previous data points [[Trip,Lat,Lon,GpsTime]*m]
         y : current data points  [[Trip,Lat,Lon,GpsTime]*m]
         '''
-        groups = tr.groupby('Trip')
-        for t in groups:
-            trip_i = t[1][['Latitude', 'Longitude', 'GpsTime']].to_numpy()
-            # take continuous points, step = freq//200
-            tmp = []
-            for i in range(0,len(trip_i),int(self.freq//200)):
-                tmp.append(trip_i[i])
-
-            mat.append(tmp)
-
-        mat = np.array(mat)
-
 
         a,b = y[-1],X[-1]
         v_speed = (b[:2] - a[:2])/(a[-1] - b[-1])

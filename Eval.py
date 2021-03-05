@@ -1,11 +1,13 @@
-from sklearn.model_selection import train_test_split
+from sklearn.model import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
-
+from dataSource import create_data_xy, train_test_split
 
 # =============================================================================
 #  Class Traitement
 # =============================================================================
+
+
 
 class Traitement:
     """
@@ -33,9 +35,10 @@ class Traitement:
     # Fonction de construction des données de train/test en fonction de la méthode 
     # passée en argument
     
-    def set_data_train_test(self, func, freq=200, test_size=0.2, random_state=0):
+    def set_data_train_test(self, freq=200, test_size=0.2, random_state=0):
         for attrs in self.l_attrs:
-            data_x, data_y = func(self.df, attrs, self.labels, freq//200)
+            data_x, data_y = create_data_xy(self.df, attrs, self.labels, freq//200)
+            
             X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, 
                                                                 test_size=test_size, random_state=random_state)
             self.l_Xtrain.append(X_train)
