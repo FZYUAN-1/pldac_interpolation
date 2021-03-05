@@ -4,24 +4,52 @@ import dataSource as ds
 import Eval as ev
 
 class physic_model(BaseEstimator,RegressorMixin):
-    def __init__(self, freq):
+    def __init__(self, step_train, step_test):
         super().__init__()
-        self.v = 
-        self.freq = freq
+        self.v = []
+        self.step_train = step_train # liste, pour les trips différents
+        self.step_test = step_test # liste, pour les trips différents
+        self.ecart = None
 
     def fit(self, X, y):
         '''
         caculate parameters vector speed self.v for one trajectory by taking the last 2 data points
         Parameters
         ----------
-        X : previous data points [[Trip,Lat,Lon,GpsTime]*m]
-        y : current data points  [[Trip,Lat,Lon,GpsTime]*m]
+        X : previous data points [[Lat,Lon,GpsTime]*m,[]]
+        y : current data points  [[Lat,Lon,GpsTime]*m,[]]
+        v : [[dLat/t, dLon/t, GpsTime],[]]
         '''
 
-        a,b = y[-1],X[-1]
-        v_speed = (b[:2] - a[:2])/(a[-1] - b[-1])
-        self.v = v_speed
+        for trip in len(X):
+            X_t = X[trip]
+            y_t = y[trip]
+            l_v = []
+            differ = y_t - X_t
+
+            for i in range(len(differ)):
+                l_v.append([differ[i,0]/differ[i,2], differ[i,0]/differ[i,2], X[i,2]])
+                
+            self.v.apprend(l_v)
+
+        self.ecart = differ[0,2] / self.step_train
+        
         return self
+
+    
+    def getInterval(self,x):
+        """
+        x : [Lat,Lon,GpsTime]
+        trouver l'intervalle de GPSTime qu'il correspond
+        """
+        t = x[-2]
+        for i in range(len(self.v)):
+            if self.v[i][2] > t:
+                return i-1
+        
+        return -1
+
+
 
     def predict(self,X):
         '''
@@ -29,9 +57,31 @@ class physic_model(BaseEstimator,RegressorMixin):
 
         Parameters
         ----------
-        X : [[Trip,Lat,Lon,Duration]*M]
-        Duration is the diff between GpsTime of y_test and that of x_test
+        X : [[Lat,Lon,GpsTime]*M]
+        On prédict les prochains points de X , Duration = step_test * self.ecart
         '''
+        duration = self.step_test * self.ecart
+
+        res = []
+        for trip in len(X):
+            X_t = X[trip]
+            v_t = self.v[trip]
+            res_t = []
+            for i in range(len(X_t)):
+                x = X_t[i]
+                indice = self.getInterval(x)
+                vi = np.array(v_t[indice])
+                res_t.append(x[:1] + duration*vi[:1])
+            
+            res.append(np.array(res_t))
+            
+        return np.array(res)
+
+
+
+
+
+
         M,N = X.shape
         res = np.zeros((M,2))
         for i in range(M):
