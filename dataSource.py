@@ -229,7 +229,7 @@ def train_test_split(df,attrs_x, labels,freq_train,freq_test):
         y_test.append(l)
         '''
         X_test.append(datax[:-step_test:step_test])
-        y_test.append(datay[step_test::step_test])
+        y_test.append(datay[step_test::step_test, :2])
 
     return X_train, X_test, y_train, y_test
 
