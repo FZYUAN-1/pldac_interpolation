@@ -79,16 +79,6 @@ class physic_model(BaseEstimator,RegressorMixin):
 
 
 
-
-
-
-        M,N = X.shape
-        res = np.zeros((M,2))
-        for i in range(M):
-            res[i] = self.v*X[i,2] + X[i,:2]
-        return res
-
-
 freq = 400
 step = freq//200
 attrs_x = ['Latitude','Longitude','GpsTime']
@@ -100,13 +90,15 @@ pos = [4,4]
 tr = ds.trouve_data_case(df, pos, latitude_min,
                          longitude_min, ecart_x, ecart_y)
 
-df = np.array(mat)
+attrs_x = [['Latitude','Longitude','GpsTime']]
+#targets
+labels = ['Latitude','Longitude','GpsTime']
 
-models = [physic_model]
+models = [physic_model()]
 
-traitement = ev.Traitement(df,attrs_x,labels)
+traitement = ev.Traitement(tr,attrs_x,labels)
 
-traitement.set_data_train_test(ds.create_data_xy, step, test_size=0.2, random_state=0)
+traitement.set_data_train_test(ds.train_test_split, attrs_x, labels, 1000, 400)
 
 #Apprentissage des modèles et évaluation à partir de l'objet traitement
 evaluateur = ev.Evaluation(models,traitement)

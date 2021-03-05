@@ -1,4 +1,3 @@
-from sklearn.model import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
 from dataSource import create_data_xy, train_test_split
@@ -38,7 +37,7 @@ class Traitement:
     # Fonction de construction des données de train/test en fonction de la méthode 
     # passée en argument
     
-    def set_data_train_test(self, freq=200, test_size=0.2, random_state=0):
+    def set_data_train_test(self):
         for attrs in self.l_attrs:
 
             X_train, X_test, y_train, y_test = train_test_split(self.df, attrs, self.labels, self.freq_train, self.freq_test)
