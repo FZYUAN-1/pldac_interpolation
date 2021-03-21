@@ -102,8 +102,10 @@ class Evaluation :
         """
         return [self.models[i].coef_ for i in range(len(self.models))]
     
+    def calculMse(self):
+        ypred = self.predict(self.l_Xtest)
+        return [mean_squared_error(self.l_Ytest[i],ypred[i]) for i in range(len(self.models))]
     
-
     # Fonctions d'affichage
     
     def afficher_score(self):
