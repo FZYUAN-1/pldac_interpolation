@@ -1,0 +1,8 @@
+DataGpsDas.csv
+.vscode/settings.json
+__pycache__/model_physique.cpython-37.pyc
+__pycache__/model_abstract.cpython-37.pyc
+__pycache__/Eval.cpython-37.pyc
+__pycache__/methods.cpython-37.pyc
+__pycache__/dataVisualization.cpython-37.pyc
+__pycache__/dataSource.cpython-37.pyc
