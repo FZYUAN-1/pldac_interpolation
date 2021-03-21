@@ -12,7 +12,7 @@ def importData():
     
 	Importation des données du fichier DataGpsDas.csv en respectant certaines contraintes.
 	"""
-	df = pd.read_csv("DataGpsDas.csv", nrows=1000000)
+	df = pd.read_csv("../DataGpsDas.csv", nrows=1000000)
 	df = df[(df["Latitude"] >= 42.282970-0.003) & (df["Latitude"] <= 42.282970+0.003) 
 			& (df["Longitude"] >= -83.735390-0.003) & (df["Longitude"] <= -83.735390+0.003)]
 	trips, counts = np.unique(df["Trip"], return_counts=True)
@@ -142,128 +142,61 @@ def echantillon(df, step=1):
     return df.iloc[ind]
 
 #Création des données d'apprentissage pour la prédiction du prochain point
-def create_data_xy(df, attrs_x, label, step_train, step_test):
+def create_data_xy(df, train_size, freq_train, freq_test):
     """ Renvoie les DataFrames X et Y, en fonction des paramètres.
 
         @params :
             df      : DataFrame : Données à traiter
-            attrs_x : list(str) : Liste des attributs dans les données d'apprentissage
-            label   : str       : Attributs du label
-            step    : int       : Le pas à prendre pour la sélection des lignes
+            train_size : float  : Pourcentage de données train
+            freq_train : int    : Freq à prendre sur train
+            freq_test  : int    : Freq à prendre sur test
             
         @return :
-            DataFrame, DataFrame           
+            DataFrame, DataFrame   
     """
-    data_x = []
-    data_y = []
-    '''
-    trips = np.unique(df["Trip"])
-
-    for t in range(len(trips)):
-        trip_df = df[df['Trip'] == trips[t]]
-        if t == 0:
-            data_x = echantillon(trip_df[:-step], step)[attrs_x]
-            data_y = echantillon(trip_df[step:], step)[label]
-
-        else :
-            x = echantillon(trip_df[:-step], step)[attrs_x]
-            y = echantillon(trip_df[step:], step)[label]
-            data_x = pd.concat([data_x,x])
-            data_y = pd.concat([data_y,y])
-    '''
-    groups = df.groupby('Trip')
-    for group in groups:
-        trip_i = group[1][attrs_x]
-        data_x.append(echantillon(trip_i[:-step], step)[attrs_x].to_numpy())
-        data_y.append(echantillon(trip_i[step:], step)[label].to_numpy())
-        
-    return data_x, data_y
-
-def train_test_split(df,attrs_x, labels,freq_train,freq_test):
-    '''
-
-    parameters:
-    -----------
-    datax : [[attrs_x]*N]
-    datay : [[labels]*N]
-    '''
-        
-    X_train = []
-    X_test = []
-    y_train = [] 
-    y_test = []
-    
-    
+    #Fréquences des données
     step_train = freq_train//200
     step_test = freq_test//200
+    
+    #Sélection des numéros de Trip en train et en test
+    trips = pd.unique(df["Trip"])
+    melange = np.arange(len(trips))
+    np.random.shuffle(melange)
+    train_trips = trips[melange[:int(len(melange)*train_size)]]
+    test_trips = trips[melange[int(len(melange)*train_size):]]
+    
+    #Création des DataFrame train/test
+    X_train = None
+    X_test = None
+    y_train = None
+    y_test = None
 
-    groups = df.groupby('Trip')
-    for group in groups:
-        trip_i = group[1]
+    #Construction des données d'apprentissage
+    for t in range(len(train_trips)):
+        train_df = df[df['Trip'] == train_trips[t]]
         
-        datax = trip_i[attrs_x].to_numpy()
-        datay = trip_i[labels].to_numpy()
-
-        #print(datax.shape)
-        tmp1 = datax[:-step_train:step_train]
-        tmp2 = datay[step_train::step_train]
-        X_train.append(tmp1)
-        y_train.append(tmp2)
-
-        #print(X_train)
-        #print(y_train)
-        '''
-        l = []
-        for point in datax[:-step_test:step_test]:
+        if t == 0:
+            X_train = echantillon(train_df[:-step_train], step_train)
+            y_train = echantillon(train_df[step_train:], step_train)
+        else :
+            xtrain = echantillon(train_df[:-step_train], step_train)
+            ytrain = echantillon(train_df[step_train:], step_train)
+            X_train = pd.concat([X_train,xtrain])
+            y_train = pd.concat([y_train,ytrain])
             
-            l.append(point)
-        X_test.append(l)
-
- 
-        l = []
-        for point in datay[step_test::step_test]:
-            if point in tmp2:
-                continue
-            else:
-                l.append(point)
-        y_test.append(l)
-        '''
-        X_test.append(datax[:-step_test:step_test])
-        y_test.append(datay[step_test::step_test, :2])
-
+    #Construction des données de test      
+    for t in range(len(test_trips)):
+        test_df = df[df['Trip'] == test_trips[t]]
+        
+        if t == 0:
+            X_test = echantillon(test_df[:-step_test], step_test)
+            y_test = echantillon(test_df[step_test:], step_test)
+        else :
+            xtest = echantillon(test_df[:-step_test], step_test)
+            ytest = echantillon(test_df[step_test:], step_test)
+            X_test = pd.concat([X_test,xtest])
+            y_test = pd.concat([y_test, ytest])
+        
     return X_train, X_test, y_train, y_test
 
-'''
-        l1 = []
-        l2 = []
-        for j in range(len(idx_datax)-1):
-            l1.append([ datax[idx_datax[j]+1:idx_datax[j+1]:step_test] ])
-            l2.append([ datay[idx_datay[j]+1:idx_datay[j+1]:step_test] ])
-        
-        l1.append(datax[idx_datax[len(idx_datax)-1]+1::step_test])
-        l2.append(datay[idx_datay[len(idx_datay)-1]+1::step_test])
-
-        X_test.append(l1)
-        y_test.append(l2)
-'''
-
-        # X_test est une liste d'intervalles et chaque intervalle contient les points de test que nous voulons faire l'interpolation avec
-        #X_test.append([ datax[i][idx_train[j]+1:idx_train[j+1]:step_test] for j in range(len(idx_train)-1)])
-        # Pareil pour y_test
-        #X_test.append([ datay[i][idx_train[j]+1:idx_train[j+1]:step_test] for j in range(len(idx_train)-1)])
-
-
-
-df = importData()
-pos = (4,4)
-latitude_min, latitude_max, longitude_min, longitude_max, ecart_x, ecart_y = calcul_param(df)
-
-case = trouve_data_case(df,pos,latitude_min, longitude_min, ecart_x, ecart_y)
-
-#datax,datay = create_data_xy(case,['Latitude','Longitude','GpsTime'],['Latitude','Longitude','GpsTime'])
-
-X_train, X_test, y_train, y_test = train_test_split(case,['Latitude','Longitude','GpsTime'],['Latitude','Longitude','GpsTime'],1000,400)
-
-#print(datax[0],datax[1],datay[0],datay[1])
-print(X_train[0],X_test[0],y_train[0],y_test[0])
 

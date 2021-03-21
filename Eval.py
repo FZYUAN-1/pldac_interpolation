@@ -1,6 +1,6 @@
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
-from dataSource import create_data_xy, train_test_split
+from dataSource import create_data_xy
 
 # =============================================================================
 #  Class Traitement
@@ -23,7 +23,7 @@ class Traitement:
         self.labels = labels
         #preprocessor
         self.preprocessor = preprocessor
-
+        #fréquences
         self.freq_train = freq_train
         self.freq_test = freq_test
 
@@ -37,20 +37,14 @@ class Traitement:
     # Fonction de construction des données de train/test en fonction de la méthode 
     # passée en argument
     
-    def set_data_train_test(self):
+    def set_data_train_test(self, train_size=0.8):
+        X_train, X_test, y_train, y_test = create_data_xy(self.df, train_size, self.freq_train, self.freq_test)
+
         for attrs in self.l_attrs:
-
-            X_train, X_test, y_train, y_test = train_test_split(self.df, attrs, self.labels, self.freq_train, self.freq_test)
-
-            # ========================================================================
-            # X_train, X_test, y_train, y_test are consisted of every trip
-            # X_train[0] -> attrs for the first trip
-            # ========================================================================
-
-            self.l_Xtrain.append(X_train)
-            self.l_Xtest.append(X_test)
-            self.l_Ytrain.append(y_train)
-            self.l_Ytest.append(y_test)
+            self.l_Xtrain.append(X_train[attrs])
+            self.l_Xtest.append(X_test[attrs])
+            self.l_Ytrain.append(y_train[self.labels])
+            self.l_Ytest.append(y_test[self.labels])
 
 
 # =============================================================================
