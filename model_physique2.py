@@ -1,7 +1,7 @@
 import numpy as np
 
 #### Modele Physique
-class modele_physique2():
+class model_physique2():
     # predict from instant speed
     # x = [[Trip, Lati, Longi, GpsHeading, GpsSpeed]]
 
@@ -42,14 +42,23 @@ class modele_physique2():
             tmp[0,1:] = test[0,:2]
 
             for i in range(N-1):
+                
                 lat1, lon1 = self.toRadians(test[i,:2])
-                d = test[i,3]*self.freq/radius
+                d = test[i,3]*self.freq*1e-3/radius
                 tc = self.toRadians(self.toNordBasedHeading(test[i,2]))
                 lat2 = np.arcsin(np.sin(lat1)*np.cos(d) + np.cos(lat1)*np.sin(d)*np.cos(tc))
                 dlon = np.arctan2(np.sin(tc)*np.sin(d)*np.cos(lat1), np.cos(d) - np.sin(lat1)*np.sin(lat2))
                 lon2= (lon1-dlon + np.pi) % (2*np.pi) - np.pi
                 tmp[i+1,1] = self.toDegrees(lat2)
                 tmp[i+1,2] = self.toDegrees(lon2)
+                '''
+                lat1, lon1 = self.toRadians(test[i,:2])
+                tc = self.toRadians(self.toNordBasedHeading(test[i,2]))
+                velocityLat = tr*np.cos(tc)
+                velocityLon = tr*np.sin(tc)
+                tmp[i+1,1] = self.toDegrees(lat1 + velocityLat* )
+                tmp[i+1,2] = 
+                '''
 
             if k == 0:
                 res = tmp
