@@ -124,7 +124,7 @@ class Evaluation :
         """
         scores = self.score()
         for i in range(len(self.models)):
-            print(f"Score obtenu pour le modèle {i : <10} : {scores[i]}")
+            print(f"Score obtenu pour le modèle {type(self.models[i]).__name__ : <10} : {scores[i]}")
             
     def afficher_coef(self):
         """
@@ -136,14 +136,15 @@ class Evaluation :
             
     def afficher_mse(self):
         ypred = self.predict(self.l_Xtest)
+        print("MSE sur les données de test:\n")
         for i in range(len(self.models)):
-            print(f"MSE obtenue pour le modèle  {i : <10} : {mean_squared_error(self.l_Ytest[i],ypred[i])}")
+            print(f"MSE obtenue pour {type(self.models[i]).__name__ : <10} : {mean_squared_error(self.l_Ytest[i],ypred[i])}")
         
     def afficher_resultats(self):
         """
             Fonction appelant les autres fonctions d'affichage.
         """
-        self.afficher_score()
+        #self.afficher_score()
         print()
         self.afficher_mse()
         print()
@@ -178,8 +179,13 @@ class Evaluation :
         plt.ylabel("MSE")
         plt.legend()
         plt.show()
-            
-        return tab_mse
+        
+        #Tableau des erreurs MSE en DataFrame
+        columns = [type(m).__name__ for m in models]
+        errMSE = pd.DataFrame(tab_mse, columns=columns, index=liste_freq)
+        
+        return errMSE
+    
     
     def matMSECase(self, freq_train, freq_test, lat_min, long_min, e_x, e_y, min_datapts=20, train_size=0.8, n_interval=10):
         models = [deepcopy(m) for m in self.models]
