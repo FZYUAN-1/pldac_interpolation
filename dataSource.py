@@ -57,10 +57,10 @@ def affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y):
         Retourne l'affectation des points du DataFrame en deux Series,
         le premier stock les indices x et le second les indices y.
     """  
-    #x = ((df["Latitude"] - latitude_min)/ecart_x).apply(math.floor)
-    #y = ((df["Longitude"] - longitude_min)/ecart_y).apply(math.floor)
-    x = ((df["Latitude"] - latitude_min)/ecart_x).apply(arrondi)
-    y = ((df["Longitude"] - longitude_min)/ecart_y).apply(arrondi)
+    x = ((df["Latitude"] - latitude_min)/ecart_x).apply(math.floor)
+    y = ((df["Longitude"] - longitude_min)/ecart_y).apply(math.floor)
+    #x = ((df["Latitude"] - latitude_min)/ecart_x).apply(arrondi)
+    #y = ((df["Longitude"] - longitude_min)/ecart_y).apply(arrondi)
     
     return x,y
 
@@ -86,7 +86,7 @@ def trouve_data_case(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
 
 
 #Calcul de l'effectif et de la vitesse moyenne de la case pour chaque point du DataFrame
-def calcul_eff_vit_moy(df,  latitude_min, latitude_max, longitude_min, ecart_x, ecart_y, n_interval=10):
+def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_interval=10):
     """ DataFrame * float * float * float * float * int -> list(int) * list(float)
     
         Retourne l'effectif et la vitesse moyenne de la case du point pour toutes les 
