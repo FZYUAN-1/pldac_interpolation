@@ -5,12 +5,56 @@ class model_physique2():
     # predict from instant speed
     # x = [[Trip, Lati, Longi, GpsHeading, GpsSpeed]]
 
-    def __init__(self,freq):
+    def __init__(self,freq,coef=0.2,nbr_points=10):
         self.freq = freq
+        self.l_freq = [self.freq*coef*i for i in range(nbr_points)]
+        self.alpha = None
 
     def fit(self, x_train, y_train):
+        """
+        x_train = [[Trip, Lati, Longi, GpsHeading, GpsSpeed]]
+        y_train = [[Lati, Longi]]
+        """
+
+        radius = 6371e3
+        res = None
+        erreur = np.inf
+        l_trips = np.unique(x_train['Trip'])
+        x_trips = x_train.sort_values('Trip')
+
+        for freq in self.l_freq:
+            k = 0
+            for t in l_trips:
+                test = x_trips[x_trips['Trip']==t].sort_values('GpsTime')[['Latitude', 'Longitude','GpsHeading','GpsSpeed']]
+                N = test.shape[0]
+                tmp = np.zeros((N,2))
+                tmp[0,:] =test.iloc[0][['Latitude', 'Longitude']].to_numpy()
+
+                for i in range(N-1):
+                    
+                    lat1, lon1 = self.toRadians(test.iloc[i,:2])
+                    d = test.iloc[i,3]*freq*1e-3/radius
+                    tc = self.toRadians(self.toNordBasedHeading(test.iloc[i,2]))
+                    lat2 = np.arcsin(np.sin(lat1)*np.cos(d) + np.cos(lat1)*np.sin(d)*np.cos(tc))
+                    dlon = np.arctan2(np.sin(tc)*np.sin(d)*np.cos(lat1), np.cos(d) - np.sin(lat1)*np.sin(lat2))
+                    lon2= (lon1-dlon + np.pi) % (2*np.pi) - np.pi
+                    tmp[i+1,0] = self.toDegrees(lat2)
+                    tmp[i+1,1] = self.toDegrees(lon2)
+
+                if k == 0:
+                    res = tmp
+                else:
+                    res = np.vstack((res,tmp))
+                
+                k += 1
+            tmp_e = self.score(res, y_train)
+
+            if tmp_e < erreur:
+                erreur = tmp_e
+                self.alpha = freq
         
-        return self
+        print("freq en entrée : ", self.freq, "le meilleur alpha trouvé : ", self.alpha)
+        return self.alpha
 
     def toDegrees(self,v):
         return v*180/np.pi   
@@ -31,34 +75,25 @@ class model_physique2():
         '''
         radius = 6371e3
         res = None
-        x_trips = x_test.groupby('Trip')
+        l_trips = np.unique(x_test['Trip'])
+        x_trips = x_test.sort_values('Trip')
         k = 0
-        for t in x_trips:
-            test = t[1][['Latitude', 'Longitude','GpsHeading','GpsSpeed']].to_numpy()
-
+        for t in l_trips:
+            test = x_trips[x_trips['Trip']==t].sort_values('GpsTime')[['Latitude', 'Longitude','GpsHeading','GpsSpeed']]
             N = test.shape[0]
-            tmp = np.zeros((N,3))
-            tmp[:,0] = t[0]
-            tmp[0,1:] = test[0,:2]
+            tmp = np.zeros((N,2))
+            tmp[0,:] =test.iloc[0][['Latitude', 'Longitude']].to_numpy()
 
             for i in range(N-1):
                 
-                lat1, lon1 = self.toRadians(test[i,:2])
-                d = test[i,3]*self.freq*1e-3/radius
-                tc = self.toRadians(self.toNordBasedHeading(test[i,2]))
+                lat1, lon1 = self.toRadians(test.iloc[i,:2])
+                d = test.iloc[i,3]*self.alpha*1e-3/radius
+                tc = self.toRadians(self.toNordBasedHeading(test.iloc[i,2]))
                 lat2 = np.arcsin(np.sin(lat1)*np.cos(d) + np.cos(lat1)*np.sin(d)*np.cos(tc))
                 dlon = np.arctan2(np.sin(tc)*np.sin(d)*np.cos(lat1), np.cos(d) - np.sin(lat1)*np.sin(lat2))
                 lon2= (lon1-dlon + np.pi) % (2*np.pi) - np.pi
-                tmp[i+1,1] = self.toDegrees(lat2)
-                tmp[i+1,2] = self.toDegrees(lon2)
-                '''
-                lat1, lon1 = self.toRadians(test[i,:2])
-                tc = self.toRadians(self.toNordBasedHeading(test[i,2]))
-                velocityLat = tr*np.cos(tc)
-                velocityLon = tr*np.sin(tc)
-                tmp[i+1,1] = self.toDegrees(lat1 + velocityLat* )
-                tmp[i+1,2] = 
-                '''
+                tmp[i+1,0] = self.toDegrees(lat2)
+                tmp[i+1,1] = self.toDegrees(lon2)
 
             if k == 0:
                 res = tmp
@@ -66,10 +101,10 @@ class model_physique2():
                 res = np.vstack((res,tmp))
             
             k += 1
-        return res[:,1:]
 
-    def score(self,x_test,y_test):
-        predict = self.predict(x_test)
-        
-        return np.sqrt(np.sum((y_test.to_numpy() - predict) ** 2))
+        return res
+
+    def score(self,yhat,y):
+
+        return np.sqrt(np.sum((yhat - y.to_numpy()) ** 2))
         
