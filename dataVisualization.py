@@ -67,14 +67,8 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	#Préparation des données
 	
 	#On sépare en n_interval la latitude et la longitude
-	x_splits = np.linspace(latitude_min,latitude_max, n_interval)
-	y_splits = np.linspace(longitude_min,longitude_max, n_interval)
-	
-	#Ajout des colonnes de l'effectif et de la vitesse moyenne d'une case
-	e, v = ds.calcul_eff_vit_moy(df, latitude_min, longitude_min, ecart_x, ecart_y)
-	df["Effectif_case"] = e    
-	df["Vitesse_moy_case"] = v
-	
+	x_splits = np.linspace(latitude_min,latitude_max, n_interval+1)
+	y_splits = np.linspace(longitude_min,longitude_max, n_interval+1)
 	
 	#Affichage 
 	fig, ax = plt.subplots(2,2, figsize=(15,12))
@@ -90,10 +84,10 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	set_ax_legend(ax[0][1], 'Visualisation des vitesses de la zone étudiée', "Latitude", "Longitude")
 	p = ax[0][1].scatter(df["Latitude"], df["Longitude"], c=df["Vitesse_moy_case"], cmap="YlOrRd")
 	cbar = plt.colorbar(p, ax=ax[0][1])
-	cbar.set_label('Vitesse moyenne')
+	cbar.set_label('Vitesse')
 		
 	#affichage grille
-	for i in range(n_interval):
+	for i in range(n_interval+1):
 		x = x_splits[i]
 		y = y_splits[i]
 		ax[0][0].plot([x,x],[longitude_min, longitude_max], c='grey',  alpha = 0.5)
@@ -123,7 +117,38 @@ def affiche_carte(df, pos, latitude_min, latitude_max, longitude_min, longitude_
 	ax[1][1].set_title(f"Distribution de la vitesse sur la case {(sx,sy)}")
 			  
 	plt.show()
-		
+
+def afficher_traffic(df, lat_min, lat_max, long_min, long_max, n_interval=10):
+    #On sépare en n_interval la latitude et la longitude
+    x_splits = np.linspace(lat_min,lat_max, n_interval+1)
+    y_splits = np.linspace(long_min,long_max, n_interval+1)
+    
+    fig, ax = plt.subplots(1,2, figsize=(15,5))
+    
+    #Visualisation (1ème figure):
+    set_ax_legend(ax[0], "Visualisation des effectifs de voiture de la zone étudiée", "Latitude", "Longitude")
+    p = ax[0].scatter(df["Longitude"], df["Latitude"], c=df["Effectif_case"], cmap="RdPu")
+    cbar = plt.colorbar(p, ax=ax[0])
+    cbar.set_label('Effectif de voiture')
+    
+    #Visualisation (2ère figure) :
+    #affichage (latitude,longitude) pour les trips en fonction de la vitesse
+    set_ax_legend(ax[1], 'Visualisation des vitesses de la zone étudiée', "Latitude", "Longitude")
+    p = ax[1].scatter(df["Longitude"], df["Latitude"], c=df["Vitesse_moy_case"], cmap="YlOrRd")
+    cbar = plt.colorbar(p, ax=ax[1])
+    cbar.set_label('Vitesse moyenne')
+    
+    #affichage grille
+    for i in range(n_interval+1):
+        x = x_splits[i]
+        y = y_splits[i]
+        ax[0].plot([long_min, long_max],[x,x], c='grey',  alpha = 0.5)
+        ax[0].plot([y,y],[lat_min,lat_max], c='grey', alpha = 0.5)
+        ax[1].plot([long_min, long_max],[x,x], c='grey',  alpha = 0.5)
+        ax[1].plot([y,y],[lat_min,lat_max], c='grey', alpha = 0.5)
+
+    plt.show()
+    
 #%%
 #Histogramme 3D de la norme des vecteurs de vitesse et ses angles Θ	
 def afficher_hist_norm_vit(df, pos, latitude_min, longitude_min, ecart_x, ecart_y):
