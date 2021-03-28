@@ -167,10 +167,20 @@ class Evaluation :
             tab_mse.append(evaluateur.calculMse())
         
         tab_mse = np.array(tab_mse)
+        
+        #Affichage MSE pour le premier modèle
+        plt.figure(figsize=(15,5))
+        plt.title("Erreur MSE en fonction de la fréquence")
+        plt.plot(tab_mse[:,0], label=type(models[0]).__name__)
+        plt.xlabel("Fréquences")
+        plt.ylabel("MSE")
+        plt.legend()
+        plt.show()
             
         #Affichage des erreurs MSE des modèles en fonction de la fréquence    
-        plt.figure(figsize=(7,5))
+        plt.figure(figsize=(15,5))
         plt.title("Erreur MSE en fonction de la fréquence")
+        
         for i in range(len(models)):
             plt.plot(tab_mse[:,i], label=type(models[i]).__name__)
             
@@ -187,23 +197,26 @@ class Evaluation :
         return errMSE
     
     
-    def matMSECase(self, freq_train, freq_test, lat_min, long_min, e_x, e_y, min_datapts=20, train_size=0.8, n_interval=10):
+    def matMSECase(self, freq_train, freq_test, lat_min, long_min, e_x, e_y, min_datapts=20, train_size=0.8, n_interval=10):      
+        #Copie des modèles
         models = [deepcopy(m) for m in self.models]
         # liste matrices erreurs des cases
         l_mat_err= [np.zeros((n_interval, n_interval)) for i in range(len(models))]
+        
+        df = self.traitement.df
         
         # parcours de toutes les cases
         for i in range(n_interval):
             for j in range(n_interval):
                 # récupération des données de la case
-                case_df=ds.trouve_data_case(self.traitement.df, (i, j), lat_min, long_min, e_x, e_y)
-    
+                case_df=ds.trouve_data_case(df, (i, j), lat_min, long_min, e_x, e_y)
+
                 #On prend les Trips qui ont au moins $min_datapoints$ points
                 #c'est pas au moins 2 points car tu splits en train et en test, ca aura moins d'un point 
                 ctrips, ccounts = np.unique(case_df["Trip"], return_counts=True)
                 ctrips = ctrips[ccounts>min_datapts]
                 case_df = case_df[case_df['Trip'].isin(ctrips)]
-    
+
                 #Cases qui ont au moins 2 trips
                 if len(pd.unique(case_df["Trip"])) > 1 :
                     traitement = Traitement(case_df, self.traitement.l_attrs, self.traitement.labels, 
@@ -218,10 +231,13 @@ class Evaluation :
     
         for m in range(len(l_mat_err)):
             fig, ax = plt.subplots(1,2, figsize=(15,5))
+            
             ax[0].set_title(f"Erreur MSE par case : {type(models[m]).__name__}")
-            sns.heatmap(l_mat_err[m], linewidths=.5, cmap="YlGnBu", yticklabels=np.arange(n_interval-1, -1, -1), ax=ax[0])
-            ax[1].set_title("Valeurs de la matrice en histogramme")
+            sns.heatmap(l_mat_err[m], linewidths=.5,annot=True, cmap="YlGnBu", yticklabels=np.arange(n_interval-1, -1, -1), ax=ax[0])
+            
+            ax[1].set_title("Histogramme des valeurs MSE")
             val = l_mat_err[m].ravel()[l_mat_err[m].ravel() != 0]
             sns.histplot(val, ax=ax[1])
-        plt.show()
-        
+                   
+            plt.show()
+            
