@@ -171,8 +171,8 @@ class Evaluation :
         #Affichage MSE pour le premier modèle
         plt.figure(figsize=(15,5))
         plt.title("Erreur MSE en fonction de la fréquence")
-        plt.plot(tab_mse[:,0], label=type(models[0]).__name__)
-        plt.xlabel("Fréquences")
+        plt.plot(liste_freq, tab_mse[:,0], label=type(models[0]).__name__)
+        plt.xlabel("Temps entre deux points")
         plt.ylabel("MSE")
         plt.legend()
         plt.show()
@@ -182,10 +182,10 @@ class Evaluation :
         plt.title("Erreur MSE en fonction de la fréquence")
         
         for i in range(len(models)):
-            plt.plot(tab_mse[:,i], label=type(models[i]).__name__)
+            plt.plot(liste_freq, tab_mse[:,i], label=type(models[i]).__name__)
             
         plt.xticks(np.arange(len(liste_freq)), np.array(liste_freq))
-        plt.xlabel("Fréquences")
+        plt.xlabel("Temps entre deux points")
         plt.ylabel("MSE")
         plt.legend()
         plt.show()

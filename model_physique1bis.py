@@ -26,15 +26,27 @@ class model_physique1bis(BaseEstimator):
         ''' 
         mat = []
         groups = X.groupby('Trip')
+        train_step = 0
+        #som = 0
         for group in groups:
-            mat.append(group[1][['Latitude','Longitude','GpsTime']].to_numpy())
-
-        try:
+            tmp = group[1][['Latitude','Longitude','GpsTime']].to_numpy()
+            mat.append(tmp)
+            if tmp.shape[0] >= 2 and train_step == 0:
+                temps_ecart = tmp[1:,2] - tmp[:-1,2]
+                train_step = np.min(temps_ecart)
+                if train_step > 10000:
+                    print(temps_ecart)
+                 
+        
+        print(train_step)
+        #train_step /= som
+        #print('M',mat)
+        """try:
             train_step = mat[0][1][2] - mat[0][0][2]
         except IndexError:
-            print('indexerror',X, mat)
+            print('indexerror',X, mat)"""
 
-        ind = self.freq_test//200 - 1
+        ind = train_step//200 - 1
         #print(ind)
         try:
             #print(t)

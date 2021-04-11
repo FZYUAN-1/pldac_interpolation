@@ -172,6 +172,7 @@ def create_data_xy(df, train_size, freq_train, freq_test):
             DataFrame, DataFrame   
     """
     #Fréquences des données
+    np.random.seed(0)
     step_train = freq_train//200
     step_test = freq_test//200
     
