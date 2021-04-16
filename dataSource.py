@@ -172,15 +172,18 @@ def create_data_xy(df, train_size, freq_train, freq_test):
             DataFrame, DataFrame   
     """
     #Fréquences des données
+    #np.random.seed(0)
+    
     step_train = freq_train//200
     step_test = freq_test//200
-    
     #Sélection des numéros de Trip en train et en test
     trips = pd.unique(df["Trip"])
-    melange = np.arange(len(trips))
-    np.random.shuffle(melange)
-    train_trips = trips[melange[:int(len(melange)*train_size)]]
-    test_trips = trips[melange[int(len(melange)*train_size):]]
+    #melange = np.arange(len(trips))
+    #np.random.shuffle(melange)
+    #train_trips = trips[melange[:int(len(melange)*train_size)]]
+    #test_trips = trips[melange[int(len(melange)*train_size):]]
+    train_trips = trips[:int(len(trips)*train_size)]
+    test_trips = trips[int(len(trips)*train_size):]
     
     #Création des DataFrame train/test
     X_train = None
@@ -188,10 +191,10 @@ def create_data_xy(df, train_size, freq_train, freq_test):
     y_train = None
     y_test = None
 
+
     #Construction des données d'apprentissage
     for t in range(len(train_trips)):
         train_df = df[df['Trip'] == train_trips[t]]
-        
         if t == 0:
             X_train = echantillon(train_df[:-step_train], step_train)
             y_train = echantillon(train_df[step_train:], step_train)
@@ -217,3 +220,35 @@ def create_data_xy(df, train_size, freq_train, freq_test):
     return X_train, X_test, y_train, y_test
 
 
+
+
+
+def create_data_xy2(df, train_size, freq_train, freq_test):
+
+    step_train = freq_train//200
+    step_test = freq_test//200
+    #Sélection des numéros de Trip en train et en test
+    trips = pd.unique(df["Trip"])
+    train_trips = trips[:int(len(trips)*train_size)]
+    test_trips = trips[int(len(trips)*train_size):]
+    
+    X_train1 = None
+    X_train2 = None
+    y_train = None
+
+    for t in range(len(train_trips)):
+        train_df = df[df['Trip'] == train_trips[t]]
+        if t == 0:
+            X_train1 = echantillon(train_df[step_train*0:-step_train*2], step_train*3)
+            X_train2 = echantillon(train_df[step_train:-step_train*1], step_train*3)
+            y_train  = echantillon(train_df[step_train*2:], step_train*3)
+        else :
+            tmp1 = echantillon(train_df[step_train*0:-step_train*2], step_train*3)
+            tmp2 = echantillon(train_df[step_train:-step_train*1], step_train*3)
+            tmp3  = echantillon(train_df[step_train*2:], step_train*3)
+
+            X_train1 = pd.concat([X_train1,tmp1])
+            X_train2 = pd.concat([X_train2,tmp2])
+            y_train = pd.concat([y_train,tmp3])
+    
+    return X_train1, X_train2, y_train

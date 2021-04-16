@@ -2,7 +2,7 @@ models/__pycache__/*
 dataset/DataGpsDas.csv
 .vscode/settings.json
 DataGpsDas.csv
-models/__pycache__/model_physique.cpython-38.pyc
-
 .vscode/launch.json
+__pycache__/*
+out.csv
 __pycache__/*
