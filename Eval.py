@@ -158,13 +158,13 @@ class Evaluation :
         
     # ----------------------------- Fonctions MSE -----------------------------
     
-    def tabMSEFreq(self, liste_freq, train_size=0.8):
+    def tabMSEFreq(self,  liste_freq, freq_train,train_size=0.8):
         tab_mse = []
         models = [deepcopy(m) for m in self.models]
         
         for freq in liste_freq:
             traitement  = Traitement(self.traitement.df, self.traitement.l_attrs, self.traitement.labels,
-                                     freq, freq, self.traitement.preprocessor)
+                                     freq_train, freq, self.traitement.preprocessor)
             traitement.set_data_train_test(train_size)
             
             evaluateur = Evaluation(models,traitement)
@@ -173,29 +173,39 @@ class Evaluation :
             tab_mse.append(evaluateur.calculMse())
         
         tab_mse = np.array(tab_mse)
-        
+        """         
         #Affichage MSE pour le premier modèle
         plt.figure(figsize=(15,5))
         plt.title("Erreur MSE en fonction de la fréquence")
-        plt.plot(tab_mse[:,0], label=type(models[0]).__name__)
-        plt.xlabel("Fréquences")
+        plt.plot(liste_freq, tab_mse[:,0], label=type(models[0]).__name__)
+        plt.xlabel("Temps entre deux points")
         plt.ylabel("MSE")
         plt.legend()
         plt.show()
-            
+        """
         #Affichage des erreurs MSE des modèles en fonction de la fréquence    
-        plt.figure(figsize=(15,5))
-        plt.title("Erreur MSE en fonction de la fréquence")
+
         
         for i in range(len(models)):
+            plt.figure(figsize=(15,5))
             plt.plot(tab_mse[:,i], label=type(models[i]).__name__)
-            
-        plt.xticks(np.arange(len(liste_freq)), np.array(liste_freq))
+
+            plt.xticks(np.arange(len(liste_freq)), np.array(liste_freq))
+            plt.xlabel("Fréquences")
+            plt.xlabel("Temps entre deux points")
+            plt.ylabel("MSE")
+            plt.legend()
+            plt.show()
+
+        plt.figure(figsize=(15,5))
+        for i in range(len(models)):
+            plt.plot(tab_mse[:,i], label=type(models[i]).__name__)
+            plt.xticks(np.arange(len(liste_freq)), np.array(liste_freq))
         plt.xlabel("Fréquences")
+        plt.xlabel("Temps entre deux points")
         plt.ylabel("MSE")
         plt.legend()
         plt.show()
-        
         #Tableau des erreurs MSE en DataFrame
         columns = [type(m).__name__ for m in models]
         errMSE = pd.DataFrame(tab_mse, columns=columns, index=liste_freq)
@@ -306,11 +316,11 @@ class Evaluation :
         data = [trace_0,trace_1]
         
         for mi in range(len(models)):
-            ypred = models[mi].predict(self.l_Xtest[mi].iloc[begin_point:end_point])
+            ypred = models[mi].predict(self.l_Xtest[mi])
             y = self.l_Ytest[mi].iloc[begin_point:end_point].to_numpy()
             mse = (ypred-y)**2
             txt = [f"Point n°{i}<br>MSE_Lat = {mse[i,0]}<br>MSE_Long = {mse[i,1]}" for i in range(len(mse))]
-            data.append(go.Scatter(x=ypred[:,0], y=ypred[:,1], mode="lines+markers", name=type(models[mi]).__name__, text=txt))
+            data.append(go.Scatter(x=ypred[begin_point:end_point,0], y=ypred[begin_point:end_point,1], mode="lines+markers", name=type(models[mi]).__name__, text=txt))
         
         layout = go.Layout(
             title='Targets et Predictions',

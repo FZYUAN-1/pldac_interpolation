@@ -95,12 +95,14 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
     
     effectif_cases = np.zeros((n_interval,n_interval))
     vitesse_cases = np.zeros((n_interval,n_interval))
+    vitesse_var = np.zeros((n_interval,n_interval))
     for i in range(n_interval):
         for j in range(n_interval):
             case_df = trouve_data_case(df, (i, j), latitude_min, longitude_min, ecart_x, ecart_y)
             if case_df.shape[0] > 0 :
                 effectif_cases[i,j] = case_df.shape[0]
                 vitesse_cases[i,j] = case_df["GpsSpeed"].mean()
+                vitesse_var[i,j] = case_df["GpsSpeed"].var()
                 
     #Création d'une nouvelles colonnes stockant les données sur les portions de route           
     sx,sy = affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y)
@@ -110,12 +112,14 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
     
     e = [] #liste effectif moyen pour chaque ligne
     v = [] #liste vitesse moyenne pour chaque ligne
+    v2 = [] #liste varaince vitesse pour chaque ligne
     
     for i in range(sx.shape[0]) :
         e.append(effectif_cases[sx.iloc[i],sy.iloc[i]])
         v.append(vitesse_cases[sx.iloc[i],sy.iloc[i]])
+        v2.append(vitesse_var[sx.iloc[i],sy.iloc[i]])
         
-    return e, v
+    return e, v, v2
 
 
 # Calcul de la norme et de l'angle  Θ  des vecteurs vitesse par rapport au point précédent
