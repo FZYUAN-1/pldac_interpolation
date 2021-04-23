@@ -1,5 +1,8 @@
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.offline import iplot,plot
 import dataSource as ds
 import dataVisualization as dv
 from copy import deepcopy
@@ -18,7 +21,7 @@ class Traitement:
         d'apprentissage et de test.
     """
     
-    def __init__(self, df, l_attrs_x, labels, freq_train, freq_test, preprocessor=None):
+    def __init__(self, df, l_attrs_x, labels, freq_train=1000, freq_test=400, preprocessor=None):
         #DataFrame
         self.df = df
         #features
@@ -150,6 +153,9 @@ class Evaluation :
         print()
         #self.afficher_coef()
         
+    #def afficher_pred(self):
+        
+        
     # ----------------------------- Fonctions MSE -----------------------------
     
     def tabMSEFreq(self,  liste_freq, freq_train,train_size=0.8):
@@ -207,13 +213,31 @@ class Evaluation :
         return errMSE
     
     
-    def matMSECase(self, freq_train, freq_test, lat_min, long_min, e_x, e_y, min_datapts=200, train_size=0.8, n_interval=10):      
+    def matMSECase(self, freq_train, freq_test, lat_min, long_min, e_x, e_y, min_datapts=20, train_size=0.8, n_interval=10):      
         #Copie des modèles
         models = [deepcopy(m) for m in self.models]
         # liste matrices erreurs des cases
         l_mat_err= [np.zeros((n_interval, n_interval)) for i in range(len(models))]
-        
+            
         df = self.traitement.df
+        
+        #Opérations pour stocker les MSE par effectif et par case
+        eff = np.unique(df["Effectif_case"])
+        ind_eff = {eff[i]:i for i in range(len(eff))}
+        
+        vit = np.unique(df["Vitesse_moy_case"])
+        ind_vit = {vit[i]:i for i in range(len(vit))}
+        
+        var = np.unique(df["Vitesse_var_case"])
+        ind_var = {var[i]:i for i in range(len(var))}
+        
+        l_mse_eff = [np.zeros(len(eff)) for _ in range(len(models))]
+        l_mse_vit = [np.zeros(len(vit)) for _ in range(len(models))]
+        l_mse_var = [np.zeros(len(var)) for _ in range(len(models))]
+        
+        eff_count = [np.zeros(len(eff)) for _ in range(len(models))]
+        vit_count = [np.zeros(len(vit)) for _ in range(len(models))]
+        var_count = [np.zeros(len(var)) for _ in range(len(models))]
         
         # parcours de toutes les cases
         for i in range(n_interval):
@@ -235,19 +259,86 @@ class Evaluation :
     
                     l_ypred = self.predict(traitement.l_Xtest)
     
-                    for mi in range(len(models)):               
-                        l_mat_err[mi][n_interval-1-i, j] = mean_squared_error(traitement.l_Ytest[mi],l_ypred[mi])
-    
-    
+                    for mi in range(len(models)):      
+                        mse_ij = mean_squared_error(traitement.l_Ytest[mi],l_ypred[mi])
+                        l_mat_err[mi][n_interval-1-i, j] = mse_ij
+                        
+                        ei = ind_eff[pd.unique(df['Effectif_case'].loc[case_df.index])[0]]
+                        vi = ind_vit[pd.unique(df['Vitesse_moy_case'].loc[case_df.index])[0]]
+                        vi2 = ind_var[pd.unique(df['Vitesse_var_case'].loc[case_df.index])[0]]
+                        l_mse_eff[mi][ei] += mse_ij
+                        l_mse_vit[mi][vi] += mse_ij
+                        l_mse_var[mi][vi2] += mse_ij
+                        eff_count[mi][ei] += 1
+                        vit_count[mi][vi] += 1
+                        var_count[mi][vi2] += 1
+                        
+                        
+        for mi in range(len(models)):
+            tmp = np.where(eff_count[mi] != 0)[0]
+            l_mse_eff[mi][tmp] /= eff_count[mi][tmp]
+            tmp = np.where(vit_count[mi] != 0)[0]
+            l_mse_vit[mi][tmp] /= vit_count[mi][tmp]
+            tmp = np.where(var_count[mi] != 0)[0]
+            l_mse_var[mi][tmp] /= var_count[mi][tmp]
+                        
         for m in range(len(l_mat_err)):
-            fig, ax = plt.subplots(1,2, figsize=(15,5))
+            fig, ax = plt.subplots(3,2, figsize=(13,13))
+            fig.suptitle(f'{type(models[m]).__name__}', fontsize=16)
             
-            ax[0].set_title(f"Erreur MSE par case : {type(models[m]).__name__}")
-            sns.heatmap(l_mat_err[m], linewidths=.5,annot=True, cmap="YlGnBu", yticklabels=np.arange(n_interval-1, -1, -1), ax=ax[0])
+            ax[0][0].set_title(f"Erreur MSE par case : {type(models[m]).__name__}")
+            sns.heatmap(l_mat_err[m], linewidths=.5,annot=True, cmap="YlGnBu", yticklabels=np.arange(n_interval-1, -1, -1), ax=ax[0][0])
             
-            ax[1].set_title("Histogramme des valeurs MSE")
+            ax[0][1].set_title("Histogramme des valeurs MSE")
             val = l_mat_err[m].ravel()[l_mat_err[m].ravel() != 0]
-            sns.histplot(val, ax=ax[1])
-                   
-            plt.show()
+            sns.histplot(val, ax=ax[0][1])
             
+            ax[1][0].set_title("Histplot MSE moy par effectif")
+            h1 = sns.histplot(x=ind_eff.keys(), y=l_mse_eff[m], ax=ax[1][0], cmap="RdPu", cbar=True)
+            h1.set(xlabel='Effectif', ylabel='MSE')
+            
+            ax[1][1].set_title("Histplot MSE moy par vitesse moy")
+            h2 = sns.histplot(x=ind_vit.keys(), y=l_mse_vit[m], ax=ax[1][1], cmap="YlOrRd", cbar=True)
+            h2.set(xlabel='Vitesse_moy', ylabel='MSE')
+                   
+            ax[2][0].set_title("Histplot MSE moy par variance vitesse")
+            h3 = sns.histplot(x=ind_var.keys(), y=l_mse_var[m], ax=ax[2][0], cmap="YlOrRd", cbar=True)
+            h3.set(xlabel='Variance_vit', ylabel='MSE')
+            
+            plt.show()
+        
+    def scatterPred(self, begin_point, end_point):
+        models = [deepcopy(m) for m in self.models]
+        
+        txt = [f"Point n°{t}" for t in range(end_point-begin_point)]
+        trace_0 = go.Scatter(x=self.l_Xtest[0]['Latitude'].iloc[begin_point:end_point], y=self.l_Xtest[0]['Longitude'].iloc[begin_point:end_point], mode="lines",name="Xtest", text=txt)
+        trace_1 = go.Scatter(x=self.l_Ytest[0].iloc[begin_point:end_point,0], y=self.l_Ytest[0].iloc[begin_point:end_point,1], mode="lines+markers", name="Target", text=txt)
+        data = [trace_0,trace_1]
+        
+        for mi in range(len(models)):
+            ypred = models[mi].predict(self.l_Xtest[mi])
+            y = self.l_Ytest[mi].iloc[begin_point:end_point].to_numpy()
+            mse = (ypred-y)**2
+            txt = [f"Point n°{i}<br>MSE_Lat = {mse[i,0]}<br>MSE_Long = {mse[i,1]}" for i in range(len(mse))]
+            data.append(go.Scatter(x=ypred[begin_point:end_point,0], y=ypred[begin_point:end_point,1], mode="lines+markers", name=type(models[mi]).__name__, text=txt))
+        
+        layout = go.Layout(
+            title='Targets et Predictions',
+            xaxis = dict(
+                title='Latitude',
+                ticklen = 5,
+                showgrid = True,
+                zeroline = False
+            ),
+            yaxis = dict(
+                title='Logitude',
+                ticklen=5,
+                showgrid=True,
+                zeroline=False,
+            )
+        )
+
+        fig = go.Figure(data=data, layout=layout)
+        iplot(fig, filename="ScatterPred")
+        
+        
