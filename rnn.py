@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import dataSource as ds
+import plotly.graph_objects as go
+from plotly.offline import iplot,plot
 
 #%% [markdown]
 ## Parametrage
@@ -155,6 +157,7 @@ epochs = 500
 
 state = model.init_hidden(batch_size) # init state, dim (n_layers, batch_size, hidden_dim)
 
+l_loss = []
 for i in range(epochs):
     for j, data in enumerate(train_loader):
         #print(data.shape, data)
@@ -172,12 +175,15 @@ for i in range(epochs):
         grad_clipping(model, 1)
         optimizer.step()
     if i%50 == 0:
+        l_loss.append(loss)
         print(i,"th iteration : ",loss)
 
+plt.plot(range(0, epochs, 50), l_loss)
+plt.legend('LSTM Loss')
 #%%
 # test set actual vs predicted
 
-def pred(input, num_future, model):
+def pred(input, num_future, model, state = None):
     """
     take last output as next input; init hidden state = zeros ; take last hidden state as next hidden state.
     
@@ -187,7 +193,8 @@ def pred(input, num_future, model):
     """
     batch_size=1
     
-    state = model.init_hidden(batch_size=batch_size)
+    if not state:
+        state = model.init_hidden(batch_size=batch_size) # why ?
 
     output = [] # first point
 
@@ -202,12 +209,42 @@ def pred(input, num_future, model):
         else:
             output.append(yhat.detach())
     
-
+    #output.insert(0, torch.Tensor([[-1.48558, 1.380634]]))
     return output
 
-output = pred(torch.Tensor([[-1.5134,  1.3806]]), 50, model)
-plt.plot([e[0][0].item() for e in output], [e[0][1].item() for e in output], label='predicted{}'.format((j)))
-#%%
+
+# laststate[0] = state.mean()
+output = pred([], 10, model)
+
+txt = [f"Point n°{t}" for t in range(len(output))]
+txt2 = [f"Point n°{t}" for t in range(len(X_train))]
+
+trace_0 = go.Scatter(x=[e[0][0].item() for e in output], y=[e[0][1].item() for e in output], name="lstm", text=txt)
+trace_1 = go.Scatter(x=X_train[:, 0], y=X_train[:, 1], name='x_train', text = txt2)
+
+data = [trace_0, trace_1]
+
+layout = go.Layout(
+    title='Targets et Predictions',
+    xaxis = dict(
+        title='Latitude',
+        ticklen = 5,
+        showgrid = True,
+        zeroline = False
+    ),
+    yaxis = dict(
+        title='Logitude',
+        ticklen=5,
+        showgrid=True,
+        zeroline=False,
+    )
+)
+
+fig = go.Figure(data=data, layout=layout)
+iplot(fig, filename="ScatterPred")
+
+#plt.scatter([e[0][0].item() for e in output], [e[0][1].item() for e in output], s = 2, label='predicted{}'.format((j)))
+#%% 
 
 test_set = timeseries(X_test,y_test)
 #test_loader = DataLoader(test_set,shuffle=False,batch_size=batch_size, drop_last = True)
@@ -216,14 +253,5 @@ test_set = timeseries(X_test,y_test)
 
 plt.scatter(test_set.y[:,0],test_set.y[:,1], s = 1,label='original')
 
-for j, data in enumerate(test_set.x):
-    
-    y_pred, state_pred = model(data[0].view(1,batch_size,input_size), state_pred) # state was well trained after iteration
-    
-    tmp = y_pred.detach().numpy()
-    
-    plt.scatter(tmp[:,0], tmp[:,1], s = 1, label='predicted{}'.format((j)))
 
-
-    plt.legend()
 # %%
