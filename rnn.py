@@ -15,7 +15,7 @@ def treat(df, batch_size, train_size, step):
 
     df = df.sort_values(by="GpsTime")
     
-    df = df[df["Trip"] == 12]
+    df = df[df["Trip"] == 57]
 
     data = df[["Latitude","Longitude"]]
     
@@ -116,7 +116,7 @@ device = torch.device("cpu")
 
 input_size = output_size = 2 # len(["Latitude","Longitude"])
 # Define hyperparameters
-n_epochs = 100
+
 lr = 1e-2
 num_hiddens = 256 # n. hidden units
 num_layer = 1   # 1 single rnn_layer
@@ -140,7 +140,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 # %%
 # training 
 
-def grad_clipping(net, theta):  #@save
+def grad_clipping(net, theta): 
     if isinstance(net, nn.Module):
         params = [p for p in net.parameters() if p.requires_grad]
     else:
@@ -151,7 +151,7 @@ def grad_clipping(net, theta):  #@save
             param.grad[:] *= theta / norm
 
 
-epochs = 1500
+epochs = 500
 
 state = model.init_hidden(batch_size) # init state, dim (n_layers, batch_size, hidden_dim)
 
@@ -175,21 +175,55 @@ for i in range(epochs):
         print(i,"th iteration : ",loss)
 
 #%%
-#test set actual vs predicted
+# test set actual vs predicted
+
+def pred(input, num_future, model):
+    """
+    take last output as next input; init hidden state = zeros ; take last hidden state as next hidden state.
+    
+    input : prefix data points (X_test when scoring)
+    num_future : number of points we want to predict, (0 when scoring)
+    
+    """
+    batch_size=1
+    
+    state = model.init_hidden(batch_size=batch_size)
+
+    output = [] # first point
+
+    for i in range(len(input) + num_future):
+        if i == 0:
+            yhat, state = model(input[0].view(-1, batch_size, 2), state)    
+        else:
+            yhat, state = model(output[-1].view(-1, batch_size, 2), state)
+        #print(yhat, output[-1])
+        if i < len(input) - 1:
+            output.append(input[i+1])
+        else:
+            output.append(yhat.detach())
+    
+
+    return output
+
+output = pred(torch.Tensor([[-1.5134,  1.3806]]), 50, model)
+plt.plot([e[0][0].item() for e in output], [e[0][1].item() for e in output], label='predicted{}'.format((j)))
+#%%
 
 test_set = timeseries(X_test,y_test)
-test_loader = DataLoader(test_set,shuffle=False,batch_size=batch_size, drop_last = True)
+#test_loader = DataLoader(test_set,shuffle=False,batch_size=batch_size, drop_last = True)
 
-state_pred = state
+#state_pred = state
 
-plt.plot(test_set.y[:,0],test_set.y[:,1], label='original')
+plt.scatter(test_set.y[:,0],test_set.y[:,1], s = 1,label='original')
 
-for j, data in enumerate(test_loader):
+for j, data in enumerate(test_set.x):
+    
     y_pred, state_pred = model(data[0].view(1,batch_size,input_size), state_pred) # state was well trained after iteration
-    #print(y_pred)
+    
     tmp = y_pred.detach().numpy()
-    plt.plot(tmp[:,0], tmp[:,1],label='predicted{}'.format((j)))
+    
+    plt.scatter(tmp[:,0], tmp[:,1], s = 1, label='predicted{}'.format((j)))
 
 
-plt.legend()
+    plt.legend()
 # %%
