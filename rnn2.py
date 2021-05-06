@@ -25,12 +25,12 @@ X_test = X_test.to_numpy()
 y_train = y_train.to_numpy()
 y_test = y_test.to_numpy()
 
+trips_train = np.unique(X_train[:,0])
+trips_test = np.unique(X_test[:,0])
 
 plt.scatter(X_train[:, 1], X_train[:, 2], s = 1, c = 'b')
 plt.scatter(y_train[:, 1], y_train[:, 2], s = 1, c = 'r')
 plt.show()
-
-
 #%%
 #dataset
 from torch.utils.data import Dataset
@@ -46,6 +46,7 @@ class timeseries(Dataset):
         return self.x[self.x[:,0]==trip][:,1:], self.y[self.y[:,0]==trip][:,1:]
   
     def __len__(self):
+
         return self.len
 
 def collate_fn(batch):
@@ -61,10 +62,12 @@ def collate_fn(batch):
 
     return features_x, features_y
 
-dataset = timeseries(X_train,y_train)
+dataset_train = timeseries(X_train,y_train)
+dataset_test = timeseries(X_test,y_test)
 #dataloader
 from torch.utils.data import DataLoader 
-train_loader = DataLoader(dataset,sampler=SubsetRandomSampler(list(trips)), collate_fn=collate_fn, batch_size=2, drop_last = True)
+train_loader = DataLoader(dataset_train,sampler=SubsetRandomSampler(list(trips_train)), collate_fn=collate_fn, batch_size=batch_size, drop_last = True)
+test_loader = DataLoader(dataset_test,sampler=SubsetRandomSampler(list(trips_test)), collate_fn=collate_fn, batch_size=batch_size, drop_last = False)
 
 # verify train_loader, especially check if batches are all consecutives
 '''
@@ -73,9 +76,12 @@ l = list(train_loader)
 print(l[0], l[1])
 '''
 #%%
-t = SubsetRandomSampler(trips)
-for x,y in train_loader:
-    print(x)
+t = SubsetRandomSampler(list(trips))
+print(np.unique(X_test[:,0]))
+for x,y in test_loader:
+    print(x[0].shape)
+    print(y.shape)
+
 #%%
 # rnn
 #neural network
@@ -157,7 +163,7 @@ def grad_clipping(net, theta):
             param.grad[:] *= theta / norm
 
 
-epochs = 300
+epochs = 800
 batch_size = 2
 state = model.init_hidden(batch_size) # init state, dim (n_layers, batch_size, hidden_dim)
 
@@ -183,14 +189,15 @@ print(X_test[:,0])
 #%%
 # test set actual vs predicted
 
+"""
 def pred(input, num_future, model):
-    """
+
     take last output as next input; init hidden state = zeros ; take last hidden state as next hidden state.
     
     input : prefix data points (X_test when scoring)
     num_future : number of points we want to predict, (0 when scoring)
     
-    """
+
 
     #state = model.init_hidden(batch_size=1)
 
@@ -210,12 +217,33 @@ def pred(input, num_future, model):
     
 
     return output
+"""
 
-output = pred(torch.Tensor(X_test[:20,1:]).to(device), X_train.shape[0], model)
+def pred(model, test_loader):
+    res = {}
+    i = 0
+    for x,y in test_loader:
+        x = x.to(device)
+        y = y.to(device)
+        print(x.shape)
+        y_pred = model(x)
+        print(x)
+        batch_size = y_pred.size(0)
+        for j in range(batch_size):
+            res[i] = torch.cat((y_pred[j].view(1,-1,2), y[j].view(1,-1,2)))
+            print(y_pred[j].shape)
+            i += 1
+    
+    return res
+
+output = pred(model, test_loader)
+#%%
 txt0 = [f'Point n°{t}' for t in range(X_train.shape[0])]
 txt = [f"Point n°{t}" for t in range(len(output))]
-trace_0 = go.Scatter(x=[e[0,0].item() for e in output], y=[e[0,1].item() for e in output], name="LSTM", text=txt)
-trace_1 = go.Scatter(x=y_test[X_test[:,0]==186][:, 1], y=y_test[X_test[:,0]==186][:, 2], name='Xtest', text = txt0)
+trace = output[0]
+print(trace[0].shape)
+trace_0 = go.Scatter(x=[e[0].item() for e in trace[0]], y=[e[1].item() for e in trace[0]], name="LSTM", text=txt)
+trace_1 = go.Scatter(x=[e[0].item() for e in trace[1]], y=[e[1].item() for e in trace[1]], name='Xtest', text = txt0)
 data = [trace_0,trace_1]
 layout = go.Layout(
     title=f'Targets et Predictions ',
@@ -237,7 +265,7 @@ fig = go.Figure(data=data, layout=layout)
 iplot(fig, filename = 'lstm')
 #plt.plot([e[0][0].item() for e in output], [e[0][1].item() for e in output], label='predicted{}'.format((j)))
 #%%
-print([e[0,0].shape for e in output])
+print(trace[0,0,0])
 #%%
 
 test_set = timeseries(X_test,y_test)
