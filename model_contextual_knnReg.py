@@ -19,7 +19,7 @@ class model_contextual_knnReg(BaseEstimator,RegressorMixin):
               y [[Latitude,Longitude]*m]
         '''
         params = {'n_neighbors':range(1,10)}
-        knr = KNeighborsRegressor()
+        knr = KNeighborsRegressor(weights='distance')
         clf = GridSearchCV(knr,params)
 
         #idx = int(len(X)*0.7)

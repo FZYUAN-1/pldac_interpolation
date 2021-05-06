@@ -5,15 +5,13 @@ from sklearn.metrics import mean_squared_error
 #### Modele Physique
 class model_physique1(BaseEstimator):
 
-    def __init__(self, step_test=None):
+    def __init__(self):
         super().__init__()
-        self.step_test = None
-        self.set_params(**{'step_test':step_test})
+        #self.step_test = None
+        #self.set_params(**{'step_test':step_test})
         self.globaltheta = None
 
     def fit(self, X, y):
-
-
         return self
 
     def predict(self,X):
@@ -35,25 +33,22 @@ class model_physique1(BaseEstimator):
             print('indexerror',X, mat)
         #print(train_step)
 
-        
-
         for X_t in mat:
             res.append(X_t[0][:2])
 
             for i in range(1,len(X_t)):
-                v = np.array([ (X_t[i-1][0] - X_t[i][0]) / train_step , (X_t[i-1][1] - X_t[i][1])/ train_step ])
+                v = np.array([ (X_t[i-1][0] - X_t[i][0]) / train_step , (X_t[i-1][1] - X_t[i][1]) / train_step ])
+                
                 if self.globaltheta:
                     v = v*self.globaltheta
                 
                 #print(v)
                 #print(self.step_test)
                 
-                res.append(X_t[i][:2] + self.step_test*v)
+                res.append(X_t[i][:2] + train_step*v)
         #print(self.step_test)
         #print(len(res), len(res[0]))
         #print(res)
         return np.array(res)
 
     
-    def score(self,X,y):
-        return -mean_squared_error(y, self.predict(X))

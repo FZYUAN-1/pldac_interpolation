@@ -12,12 +12,23 @@ def importData():
     
     Importation des données du fichier DataGpsDas.csv en respectant certaines contraintes.
     """
-    df = pd.read_csv("../DataGpsDas.csv", nrows=1000000)
+    df = pd.read_csv("DataGpsDas.csv", nrows=1000000)
     df = df[(df["Latitude"] >= 42.282970-0.003) & (df["Latitude"] <= 42.282970+0.003) 
             & (df["Longitude"] >= -83.735390-0.003) & (df["Longitude"] <= -83.735390+0.003)]
     trips, counts = np.unique(df["Trip"], return_counts=True)
     trips = trips[counts>100]
     df = df[df['Trip'].isin(trips)]
+
+    drop_columns = ['Device', 'Time', 'GpsWeek', 'Altitude', 'NumberOfSats', 'Differential', 'FixMode', 'Pdop',
+                'GpsBytes', 'UtcTime', 'UtcWeek']
+
+    df = df.drop(drop_columns, axis=1)
+
+    # z-score standardization
+    df['Latitude'] = (df['Latitude'] - df['Latitude'].mean())/df['Latitude'].std()
+    df['Longitude'] = (df['Longitude'] - df['Longitude'].mean())/df['Longitude'].std()
+    df['GpsSpeed'] = (df['GpsSpeed'] - df['GpsSpeed'].mean())/df['GpsSpeed'].std()
+
     return df
 
 
@@ -95,12 +106,14 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
     
     effectif_cases = np.zeros((n_interval,n_interval))
     vitesse_cases = np.zeros((n_interval,n_interval))
+    vitesse_var = np.zeros((n_interval,n_interval))
     for i in range(n_interval):
         for j in range(n_interval):
             case_df = trouve_data_case(df, (i, j), latitude_min, longitude_min, ecart_x, ecart_y)
             if case_df.shape[0] > 0 :
                 effectif_cases[i,j] = case_df.shape[0]
                 vitesse_cases[i,j] = case_df["GpsSpeed"].mean()
+                vitesse_var[i,j] = case_df["GpsSpeed"].var()
                 
     #Création d'une nouvelles colonnes stockant les données sur les portions de route           
     sx,sy = affectation_2(df, latitude_min, longitude_min, ecart_x, ecart_y)
@@ -110,12 +123,14 @@ def calcul_eff_vit_moy(df,  latitude_min, longitude_min, ecart_x, ecart_y, n_int
     
     e = [] #liste effectif moyen pour chaque ligne
     v = [] #liste vitesse moyenne pour chaque ligne
+    v2 = [] #liste varaince vitesse pour chaque ligne
     
     for i in range(sx.shape[0]) :
         e.append(effectif_cases[sx.iloc[i],sy.iloc[i]])
         v.append(vitesse_cases[sx.iloc[i],sy.iloc[i]])
+        v2.append(vitesse_var[sx.iloc[i],sy.iloc[i]])
         
-    return e, v
+    return e, v, v2
 
 
 # Calcul de la norme et de l'angle  Θ  des vecteurs vitesse par rapport au point précédent
@@ -172,16 +187,18 @@ def create_data_xy(df, train_size, freq_train, freq_test):
             DataFrame, DataFrame   
     """
     #Fréquences des données
-    np.random.seed(0)
+    #np.random.seed(0)
+    
     step_train = freq_train//200
     step_test = freq_test//200
-    
     #Sélection des numéros de Trip en train et en test
     trips = pd.unique(df["Trip"])
-    melange = np.arange(len(trips))
-    np.random.shuffle(melange)
-    train_trips = trips[melange[:int(len(melange)*train_size)]]
-    test_trips = trips[melange[int(len(melange)*train_size):]]
+    #melange = np.arange(len(trips))
+    #np.random.shuffle(melange)
+    #train_trips = trips[melange[:int(len(melange)*train_size)]]
+    #test_trips = trips[melange[int(len(melange)*train_size):]]
+    train_trips = trips[:int(len(trips)*train_size)]
+    test_trips = trips[int(len(trips)*train_size):]
     
     #Création des DataFrame train/test
     X_train = None
@@ -189,10 +206,10 @@ def create_data_xy(df, train_size, freq_train, freq_test):
     y_train = None
     y_test = None
 
+
     #Construction des données d'apprentissage
     for t in range(len(train_trips)):
         train_df = df[df['Trip'] == train_trips[t]]
-        
         if t == 0:
             X_train = echantillon(train_df[:-step_train], step_train)
             y_train = echantillon(train_df[step_train:], step_train)
