@@ -7,3 +7,4 @@ __pycache__/*
 out.csv
 __pycache__/*
 main.ipynb
+rnn.py
