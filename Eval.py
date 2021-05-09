@@ -85,6 +85,13 @@ class Evaluation :
         else: 
             self.models_pip = self.models
     
+        for mi in range(len(models)):
+            if type(models[mi]).__name__ == 'model_physique1':
+                temp = self.l_Xtest[mi].copy()
+                temp['index'] = temp.index
+                f = temp.groupby(['Trip']).nth(1).reset_index()['index'].values
+                self.l_Ytest[mi].drop(f, inplace=True)
+        
         
     
     def fit(self):
@@ -142,6 +149,7 @@ class Evaluation :
         print("MSE sur les données de test:\n")
         for i in range(len(self.models)):
             print(f"MSE obtenue pour {type(self.models[i]).__name__ : <10} : {mean_squared_error(self.l_Ytest[i],ypred[i])}")
+            #print(f"MSE obtenue pour {type(self.models[i]).__name__ : <10} : {np.mean((self.l_Ytest[i]-ypred[i])**2)}")
         
     def afficher_resultats(self):
         """
@@ -314,14 +322,18 @@ class Evaluation :
         trace_0 = go.Scatter(x=self.l_Xtest[0]['Latitude'].iloc[begin_point:end_point], y=self.l_Xtest[0]['Longitude'].iloc[begin_point:end_point], mode="lines",name="Xtest", text=txt)
         trace_1 = go.Scatter(x=self.l_Ytest[0].iloc[begin_point:end_point,0], y=self.l_Ytest[0].iloc[begin_point:end_point,1], mode="lines+markers", name="Target", text=txt)
         data = [trace_0,trace_1]
+        l_mse = []
         
         for mi in range(len(models)):
-            ypred = models[mi].predict(self.l_Xtest[mi])
+            ypred = models[mi].predict(self.l_Xtest[mi])[begin_point:end_point]
             y = self.l_Ytest[mi].iloc[begin_point:end_point].to_numpy()
-            mse = (ypred-y)**2
-            txt = [f"Point n°{i}<br>MSE_Lat = {mse[i,0]}<br>MSE_Long = {mse[i,1]}" for i in range(len(mse))]
-            data.append(go.Scatter(x=ypred[begin_point:end_point,0], y=ypred[begin_point:end_point,1], mode="lines+markers", name=type(models[mi]).__name__, text=txt))
-        
+            # mse = (ypred-y)**2
+            mse = [mean_squared_error(y[i], ypred[i]) for i in range(len(y))]
+            #txt = [f"Point n°{i}<br>MSE_Lat = {mse[i,0]}<br>MSE_Long = {mse[i,1]}" for i in range(len(mse))]
+            txt = [f"Point n°{i}<br>MSE = {mse[i]}" for i in range(len(mse))]
+            data.append(go.Scatter(x=ypred[:,0], y=ypred[:,1], mode="lines+markers", name=type(models[mi]).__name__, text=txt))
+            l_mse.append(np.sum(mse))
+            
         layout = go.Layout(
             title='Targets et Predictions',
             xaxis = dict(
@@ -341,4 +353,4 @@ class Evaluation :
         fig = go.Figure(data=data, layout=layout)
         iplot(fig, filename="ScatterPred")
         
-        
+        return l_mse

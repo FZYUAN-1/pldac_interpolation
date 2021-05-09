@@ -34,18 +34,17 @@ class model_physique1(BaseEstimator):
         #print(train_step)
 
         for X_t in mat:
-            res.append(X_t[0][:2])
+            #res.append(X_t[0][:2])
 
             for i in range(1,len(X_t)):
-                v = np.array([ (X_t[i-1][0] - X_t[i][0]) / train_step , (X_t[i-1][1] - X_t[i][1]) / train_step ])
-                
+                v = np.array([ (X_t[i][0] - X_t[i-1][0]) / train_step , (X_t[i][1] - X_t[i-1][1]) / train_step ])
                 if self.globaltheta:
                     v = v*self.globaltheta
                 
                 #print(v)
                 #print(self.step_test)
                 
-                res.append(X_t[i][:2] + train_step*v)
+                res.append(X_t[i-1][:2] + train_step*v)
         #print(self.step_test)
         #print(len(res), len(res[0]))
         #print(res)
